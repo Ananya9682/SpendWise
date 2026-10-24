@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense details – SpendWise</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="site-header">
+        <a class="brand" href="index.html">SpendWise</a>
+        <nav aria-label="Account">
+            <span id="user-email" class="user-email"></span>
+            <button id="logout-btn" class="btn btn-ghost" type="button">Log out</button>
+        </nav>
+    </header>
+
+    <main id="main" class="container">
+        <p class="detail-actions">
+            <a class="btn btn-secondary" href="expenses.html">Back to expenses</a>
+        </p>
+
+        <p id="loading" class="empty" role="status">Loading expense…</p>
+        <p id="problem" class="empty" role="status" hidden></p>
+
+        <article id="details" class="card detail-card" aria-labelledby="detail-title" hidden>
+            <h1 id="detail-title"></h1>
+            <p id="detail-amount" class="detail-amount"></p>
+            <dl class="detail-list">
+                <div>
+                    <dt>Category</dt>
+                    <dd><span id="detail-category" class="chip"></span></dd>
+                </div>
+                <div>
+                    <dt>Date</dt>
+                    <dd id="detail-date"></dd>
+                </div>
+                <div>
+                    <dt>Notes</dt>
+                    <dd id="detail-notes" class="detail-notes"></dd>
+                </div>
+            </dl>
+        </article>
+    </main>
+
+    <script type="module" src="js/expense-details.js"></script>
+</body>
+</html>
