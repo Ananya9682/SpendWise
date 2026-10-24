@@ -1,13 +1,32 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SpendWise</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <h1>Welcome to SpendWise!</h1>
-    <p>Your personal expense tracker starts here.</p>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="site-header">
+        <a class="brand" href="index.html">SpendWise</a>
+        <nav aria-label="Main">
+            <a class="btn btn-ghost" href="login.html">Log in</a>
+            <a class="btn btn-primary" href="signup.html">Sign up</a>
+        </nav>
+    </header>
+
+    <main id="main" class="hero">
+        <h1>Welcome to SpendWise!</h1>
+        <p>Your personal expense tracker starts here.</p>
+        <div class="hero-actions">
+            <a class="btn btn-primary btn-large" href="signup.html">Create an account</a>
+            <a class="btn btn-secondary btn-large" href="login.html">Log in</a>
+        </div>
+    </main>
 </body>
 </html>

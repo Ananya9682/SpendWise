@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spending Reports – SpendWise</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="site-header">
+        <a class="brand" href="index.html">SpendWise</a>
+
+        <nav aria-label="Account and navigation">
+            <a class="btn btn-secondary" href="expenses.html">Dashboard</a>
+            <span id="user-email" class="user-email"></span>
+            <button id="logout-btn" class="btn btn-ghost" type="button">
+                Log out
+            </button>
+        </nav>
+    </header>
+
+    <main id="main" class="container">
+        <p id="loading" class="empty" role="status">
+            Loading your spending reports…
+        </p>
+
+        <div id="reports-app" hidden>
+            <section class="hero" style="padding: 1rem 0 2rem;">
+                <h1>Spending reports</h1>
+                <p>
+                    Understand your spending habits and see how they change
+                    over the last six months.
+                </p>
+            </section>
+
+            <p id="report-error" class="message is-error" role="alert" hidden></p>
+
+            <section class="dashboard" aria-label="Spending overview">
+                <article class="card">
+                    <h2>This month</h2>
+                    <p id="current-month-name" class="chart-description"></p>
+                    <p id="current-month-total" class="summary-total">₹0.00</p>
+                    <p id="current-month-count" class="summary-count"></p>
+                </article>
+
+                <article class="card">
+                    <h2>Last month</h2>
+                    <p id="previous-month-name" class="chart-description"></p>
+                    <p id="previous-month-total" class="summary-total">₹0.00</p>
+                    <p id="previous-month-count" class="summary-count"></p>
+                </article>
+
+                <article class="card">
+                    <h2>Month-to-month change</h2>
+                    <p id="spending-change" class="detail-amount">—</p>
+                    <p id="spending-change-description">
+                        Comparing this month with last month.
+                    </p>
+                </article>
+
+                <article class="card">
+                    <h2>Top spending category</h2>
+                    <p id="top-category" class="detail-amount">—</p>
+                    <p id="top-category-total">No spending data yet.</p>
+                </article>
+            </section>
+
+            <section class="card spending-chart" aria-labelledby="trend-title" style="margin-top: 1.5rem;">
+                <h2 id="trend-title">Six-month spending trend</h2>
+                <p class="chart-description">
+                    Compare your total expenses month by month.
+                </p>
+
+                <div id="trend-chart-container" class="chart-container">
+                    <canvas
+                        id="spending-trend-chart"
+                        role="img"
+                        aria-label="Bar chart showing monthly spending over the last six months"
+                    ></canvas>
+                </div>
+
+                <p id="trend-empty" class="empty" hidden>
+                    No expenses found for these six months.
+                    Add expenses to see your trend.
+                </p>
+            </section>
+
+            <section class="card" aria-labelledby="monthly-breakdown-title" style="margin-top: 1.5rem;">
+                <h2 id="monthly-breakdown-title">Monthly breakdown</h2>
+                <p class="chart-description">
+                    Total spending and number of expenses for each month.
+                </p>
+
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Month</th>
+                                <th scope="col">Total spent</th>
+                                <th scope="col">Expenses</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthly-breakdown-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <p id="report-message" class="message" role="status"></p>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="js/reports.js"></script>
+</body>
+</html>
