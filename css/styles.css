@@ -1,13 +1,14 @@
+
 /* ==========================================================
-   SpendWise styles
-   1. Design tokens (colours, fonts) – change the look here
-   2. Base and layout
-   3. Buttons and form fields
-   4. Pages: landing, login/signup, dashboard
+   SpendWise — Complete responsive stylesheet
+   Themes: Default, Bright, Classic, Calm, High Contrast,
+   Midnight Navy
    ========================================================== */
 
-/* 1. Design tokens ---------------------------------------- */
-:root {
+/* 1. Default theme */
+:root,
+:root[data-theme="default"],
+body[data-theme="default"] {
   --paper: #f3f5f7;
   --surface: #ffffff;
   --ink: #14202b;
@@ -20,32 +21,127 @@
   --danger-soft: #fdecea;
   --success: #12663a;
   --success-soft: #e3f5ea;
+  --warning: #805400;
+  --warning-soft: #fff3d6;
+  --focus: #536dfe;
 
-  --font-heading: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Instrument Sans", system-ui, sans-serif;
 
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
-/* Dark theme follows the device setting automatically */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #0f151b;
-    --surface: #18212a;
-    --ink: #e8edf2;
-    --muted: #a5b2bf;
-    --line: #2d3a46;
-    --primary: #98a4ff;
-    --on-primary: #0f151b;
-    --primary-soft: #232a52;
-    --danger: #ff9a92;
-    --danger-soft: #3a1f1d;
-    --success: #7fe0a6;
-    --success-soft: #16301f;
-  }
+/* 2. Bright theme */
+:root[data-theme="youthful"],
+body[data-theme="youthful"] {
+  --paper: #fff4fa;
+  --surface: #ffffff;
+  --ink: #3d174f;
+  --muted: #785c85;
+  --line: #f0cce5;
+  --primary: #c026d3;
+  --on-primary: #ffffff;
+  --primary-soft: #fae8ff;
+  --danger: #be123c;
+  --danger-soft: #ffe4e6;
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --warning: #805400;
+  --warning-soft: #fff3d6;
+  --focus: #c026d3;
+  color-scheme: light;
 }
 
-/* 2. Base and layout -------------------------------------- */
+/* 3. Classic theme */
+:root[data-theme="classic"],
+body[data-theme="classic"] {
+  --paper: #f4efe6;
+  --surface: #fffdf8;
+  --ink: #30271e;
+  --muted: #756656;
+  --line: #ded2c1;
+  --primary: #76502e;
+  --on-primary: #ffffff;
+  --primary-soft: #eee1cf;
+  --danger: #a12b24;
+  --danger-soft: #fbe9e6;
+  --success: #386641;
+  --success-soft: #e3efdf;
+  --warning: #805400;
+  --warning-soft: #fff3d6;
+  --focus: #76502e;
+  color-scheme: light;
+}
+
+/* 4. Calm theme */
+:root[data-theme="calm"],
+body[data-theme="calm"] {
+  --paper: #edf6f5;
+  --surface: #ffffff;
+  --ink: #193b3b;
+  --muted: #587574;
+  --line: #c9e0dc;
+  --primary: #287d78;
+  --on-primary: #ffffff;
+  --primary-soft: #d9f0eb;
+  --danger: #b42335;
+  --danger-soft: #fde8eb;
+  --success: #18794e;
+  --success-soft: #dff5e9;
+  --warning: #805400;
+  --warning-soft: #fff3d6;
+  --focus: #287d78;
+  color-scheme: light;
+}
+
+/* 5. High contrast theme */
+:root[data-theme="high_contrast"],
+body[data-theme="high_contrast"] {
+  --paper: #ffffff;
+  --surface: #ffffff;
+  --ink: #000000;
+  --muted: #292929;
+  --line: #555555;
+  --primary: #0037c8;
+  --on-primary: #ffffff;
+  --primary-soft: #e2eaff;
+  --danger: #b00020;
+  --danger-soft: #ffebee;
+  --success: #006b35;
+  --success-soft: #e4ffed;
+  --warning: #704600;
+  --warning-soft: #fff0c2;
+  --focus: #0037c8;
+  color-scheme: light;
+}
+
+/* 6. Midnight Navy theme */
+:root[data-theme="midnight_navy"],
+body[data-theme="midnight_navy"] {
+  --paper: #101827;
+  --surface: #1b2638;
+  --ink: #f1f5ff;
+  --muted: #b5c1d6;
+  --line: #35445c;
+  --primary: #9aaeff;
+  --on-primary: #101827;
+  --primary-soft: #293653;
+  --danger: #ff9b9b;
+  --danger-soft: #452b35;
+  --success: #83e0b0;
+  --success-soft: #203d38;
+  --warning: #ffda82;
+  --warning-soft: #453619;
+  --focus: #b6c4ff;
+  color-scheme: dark;
+}
+
+/* Keep hidden elements hidden. */
+[hidden] {
+  display: none !important;
+}
+
+/* Base */
 *,
 *::before,
 *::after {
@@ -54,6 +150,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -63,47 +160,70 @@ body {
   font-family: var(--font-body);
   font-size: 1rem;
   line-height: 1.55;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 h1,
 h2,
 h3 {
-  font-family: var(--font-heading);
-  line-height: 1.15;
   margin: 0;
+  font-family: var(--font-heading);
+  line-height: 1.2;
 }
 
 p {
   margin: 0;
 }
 
-:focus-visible {
-  outline: 3px solid var(--primary);
-  outline-offset: 2px;
+a {
+  color: var(--primary);
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+
+/* Skip link */
 .skip-link {
   position: absolute;
+  z-index: 100;
+  top: -5rem;
   left: 1rem;
-  top: -4rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
   background: var(--primary);
   color: var(--on-primary);
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  z-index: 20;
 }
 
 .skip-link:focus {
   top: 1rem;
 }
 
+/* Header */
 .site-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  max-width: 1040px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 1rem;
 }
@@ -111,58 +231,69 @@ p {
 .site-header nav {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .brand {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.4rem;
   color: var(--ink);
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
   text-decoration: none;
+  letter-spacing: -0.03em;
 }
 
-.container {
-  max-width: 1040px;
+.user-email {
+  max-width: 240px;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.container,
+.hero {
+  width: 100%;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 0.5rem 1rem 3rem;
 }
 
-.user-email {
-  color: var(--muted);
-  font-size: 0.95rem;
-  overflow-wrap: anywhere;
-}
-
-/* Shown when config.js still has placeholder values */
 .config-banner {
+  padding: 0.9rem 1rem;
+  border-bottom: 2px solid var(--danger);
   background: var(--danger-soft);
   color: var(--danger);
-  border-bottom: 2px solid var(--danger);
-  padding: 0.9rem 1rem;
   font-weight: 600;
 }
 
-/* 3. Buttons and form fields ------------------------------ */
+/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
   min-height: 44px;
-  padding: 0.55rem 1.1rem;
-  border: 2px solid transparent;
+  padding: 0.55rem 1rem;
+  border: 1.5px solid transparent;
   border-radius: 10px;
-  font: inherit;
   font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-primary {
@@ -175,13 +306,14 @@ p {
 }
 
 .btn-secondary {
-  background: transparent;
+  border-color: var(--line);
+  background: var(--surface);
   color: var(--ink);
-  border-color: var(--ink);
 }
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--primary-soft);
+  border-color: var(--primary);
 }
 
 .btn-ghost {
@@ -194,9 +326,9 @@ p {
 }
 
 .btn-danger {
+  border-color: var(--danger);
   background: transparent;
   color: var(--danger);
-  border-color: var(--danger);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -210,56 +342,86 @@ p {
 }
 
 .btn-small {
-  min-height: 40px;
-  padding: 0.35rem 0.85rem;
-  font-size: 0.95rem;
+  min-height: 36px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
 }
 
+/* Forms */
 .field {
+  min-width: 0;
   margin-bottom: 1rem;
 }
 
-.field label {
+.field label,
+.notes-editor label {
   display: block;
+  margin-bottom: 0.35rem;
   font-weight: 600;
-  margin-bottom: 0.3rem;
 }
 
 .field .hint {
   display: block;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 400;
 }
 
 .field input,
 .field select,
-.field textarea {
+.field textarea,
+.notes-editor textarea {
+  display: block;
   width: 100%;
+  min-width: 0;
   min-height: 46px;
-  padding: 0.6rem 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
   background: var(--surface);
   color: var(--ink);
-  border: 1.5px solid var(--muted);
-  border-radius: 10px;
-  font: inherit; /* 1rem keeps iPhones from zooming in on focus */
+  font: inherit;
 }
 
-.field textarea {
-  min-height: 96px;
+.field textarea,
+.notes-editor textarea {
+  min-height: 100px;
   resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.notes-editor textarea:focus {
+  border-color: var(--primary);
+  outline: 2px solid var(--primary-soft);
 }
 
 .field-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* Status messages */
 .message {
-  margin-top: 1rem;
-  padding: 0.7rem 0.9rem;
+  margin-top: 0.8rem;
+  padding: 0.7rem 0.85rem;
   border-radius: 10px;
+  overflow-wrap: anywhere;
   font-weight: 500;
 }
 
@@ -277,27 +439,32 @@ p {
   color: var(--success);
 }
 
-/* 4. Pages ------------------------------------------------ */
+.empty {
+  padding: 1.1rem;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+}
 
 /* Landing page */
 .hero {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 3rem 1rem 4rem;
+  padding-top: 3.5rem;
+  padding-bottom: 4rem;
 }
 
 .hero h1 {
+  max-width: 14ch;
   font-size: clamp(2.4rem, 7vw, 4.5rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
-  max-width: 14ch;
+  letter-spacing: -0.035em;
 }
 
 .hero p {
+  max-width: 42ch;
   margin-top: 1rem;
-  font-size: 1.25rem;
   color: var(--muted);
-  max-width: 40ch;
+  font-size: 1.2rem;
 }
 
 .hero-actions {
@@ -307,18 +474,26 @@ p {
   margin-top: 2rem;
 }
 
-/* Login and signup */
+/* Cards */
+.card {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 3%);
+}
+
+.card h2,
+.dashboard h2 {
+  margin-bottom: 0.9rem;
+  font-size: 1.3rem;
+}
+
 .auth-wrap {
   max-width: 440px;
   margin: 0 auto;
   padding: 1rem 1rem 3rem;
-}
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 1.25rem;
 }
 
 .auth-wrap .card {
@@ -326,8 +501,12 @@ p {
 }
 
 .auth-wrap h1 {
-  font-size: 1.9rem;
   margin-bottom: 1.25rem;
+  font-size: 1.9rem;
+}
+
+.auth-wrap .btn-primary {
+  width: 100%;
 }
 
 .auth-switch {
@@ -336,161 +515,416 @@ p {
 }
 
 .auth-switch a {
-  color: var(--ink);
+  color: var(--primary);
   font-weight: 600;
 }
 
-.auth-wrap .btn-primary {
-  width: 100%;
-}
-
-/* Dashboard */
+/* Dashboard layout */
 .dashboard {
   display: grid;
   gap: 1.25rem;
 }
 
-.dashboard h2 {
-  font-size: 1.35rem;
-  margin-bottom: 0.9rem;
+.dashboard-side,
+.dashboard-main {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 1.25rem;
 }
 
+.dashboard-main > section {
+  min-width: 0;
+}
+
+/* Monthly summary */
 .summary {
+  padding: 1.35rem;
+  border-radius: 16px;
   background: var(--primary);
   color: var(--on-primary);
-  border-radius: 16px;
-  padding: 1.25rem 1.25rem 1.4rem;
 }
 
 .summary h2 {
+  margin-bottom: 0.45rem;
   font-size: 1.05rem;
   font-weight: 600;
-  margin-bottom: 0.4rem;
 }
 
 .summary-total {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: clamp(2.4rem, 9vw, 3.4rem);
-  line-height: 1.05;
-  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
+  font-family: var(--font-heading);
+  font-size: clamp(2.2rem, 8vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .summary-count {
-  margin-top: 0.35rem;
+  margin-top: 0.45rem;
 }
 
-.form-actions {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+/* Preferences */
+.preferences-card {
+  margin-bottom: 1.25rem;
 }
 
+.preferences-card > p {
+  margin-bottom: 1.25rem;
+  color: var(--muted);
+}
+
+.preferences-card .field {
+  max-width: 560px;
+}
+
+/* Expense list */
 .expense-list {
-  list-style: none;
+  display: grid;
+  gap: 0.8rem;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 0.75rem;
+  list-style: none;
 }
 
-.expense {
+.expense-list > li {
+  min-width: 0;
+}
+
+/* Supports both the existing .expense class and JS-generated .expense-item. */
+.expense,
+.expense-item {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.25rem 1rem;
-  background: var(--surface);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem 1rem;
+  min-width: 0;
+  padding: 1rem;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 0.9rem 1rem;
+  border-radius: 13px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.expense:hover,
+.expense-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 4%);
+}
+
+.expense-info {
+  display: grid;
+  min-width: 0;
+  gap: 0.3rem;
 }
 
 .expense-title {
-  font-size: 1.1rem;
+  font-family: var(--font-heading);
+  font-size: 1.08rem;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
 .expense-amount {
+  align-self: start;
+  color: var(--ink);
   font-family: var(--font-heading);
+  font-size: 1.12rem;
   font-weight: 700;
-  font-size: 1.15rem;
-  font-variant-numeric: tabular-nums;
   text-align: right;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .expense-meta {
-  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.45rem;
   flex-wrap: wrap;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
   background: var(--primary-soft);
   color: var(--ink);
-  border-radius: 999px;
-  padding: 0.1rem 0.7rem;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-.expense-notes {
+.expense-notes,
+.expense-notes-preview {
   grid-column: 1 / -1;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  margin-top: 0.2rem;
   padding-left: 0.75rem;
   border-left: 3px solid var(--line);
+  color: var(--muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.expense-notes-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+ line-clamp: 2;
+-webkit-line-clamp: 2;
 }
 
 .expense-actions {
   grid-column: 1 / -1;
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.2rem;
 }
 
-.empty {
+.expense-actions .btn {
+  min-height: 38px;
+}
+
+.expense-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Filters */
+.expense-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
   background: var(--surface);
-  border: 1px dashed var(--muted);
-  border-radius: 12px;
-  padding: 1.25rem;
+}
+
+.expense-filters .field {
+  margin: 0;
+}
+
+.expense-filters .btn {
+  width: 100%;
+}
+
+.filter-count {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+#list-message:empty,
+#filter-error:empty {
+  display: none;
+}
+
+/* Chart */
+.dashboard-main {
+  min-width: 0;
+}
+
+.spending-chart {
+  min-width: 0;
+}
+
+.chart-description {
+  margin: -0.35rem 0 1rem;
   color: var(--muted);
 }
 
-/* Two columns on laptops: summary + form on the left, list on the right */
-@media (min-width: 900px) {
-  .dashboard {
-    grid-template-columns: minmax(300px, 380px) 1fr;
-    align-items: start;
-  }
-
-  .dashboard-side {
-    display: grid;
-    gap: 1.25rem;
-  }
+.chart-container {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 290px;
+  margin: 0 auto 1rem;
 }
 
-@media (max-width: 420px) {
-  .field-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
+.chart-container canvas {
+  max-width: 100%;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
+.category-summary {
+  display: grid;
+  gap: 0;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-/* ==========================================================
-   Expense details page (expense-details.html)
-   ========================================================== */
+.category-summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
 
+.category-summary-item:last-child {
+  border-bottom: none;
+}
+
+.category-summary-item strong {
+  flex-shrink: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.category-summary-item span {
+  overflow-wrap: anywhere;
+}
+
+/* Spending insights */
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.insight-item {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.insight-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.insight-item strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 1.12rem;
+}
+
+.insight-item p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+/* Monthly budget */
+.budget-card {
+  min-width: 0;
+}
+
+.budget-month-label {
+  margin: -0.4rem 0 1.1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.budget-card .field {
+  margin-bottom: 0.75rem;
+}
+
+.budget-card .btn {
+  width: 100%;
+}
+
+.budget-progress-area {
+  margin-top: 1.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+}
+
+.budget-numbers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.budget-numbers > div {
+  min-width: 0;
+}
+
+.budget-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.budget-numbers strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-family: var(--font-heading);
+  font-size: clamp(1rem, 4vw, 1.3rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-remaining-block strong {
+  color: var(--success);
+}
+
+.budget-progress-track {
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.budget-progress-bar {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--success);
+  transition: width 0.25s ease;
+}
+
+.budget-progress-bar.is-warning {
+  background: #c58a16;
+}
+
+.budget-progress-bar.is-over-budget {
+  background: var(--danger);
+}
+
+.budget-percent {
+  margin-top: 0.6rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.budget-alert {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: var(--success-soft);
+  color: var(--success);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.budget-alert.is-warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.budget-alert.is-over-budget {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* Expense details page */
 .detail-actions {
   margin-bottom: 1rem;
 }
@@ -507,11 +941,11 @@ p {
 
 .detail-amount {
   margin-top: 0.5rem;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: clamp(2.2rem, 8vw, 3.2rem);
-  line-height: 1.05;
   color: var(--primary);
+  font-family: var(--font-heading);
+  font-size: clamp(2.2rem, 8vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
@@ -535,361 +969,660 @@ p {
 }
 
 .detail-notes {
-  white-space: pre-wrap;
   padding-left: 0.75rem;
   border-left: 3px solid var(--line);
+  white-space: pre-wrap;
 }
 
 .detail-notes.is-empty {
   color: var(--muted);
 }
 
-/* Expense notes editor */
+/* Notes editor */
 .notes-editor {
-    margin-top: 1rem;
-}
-
-.notes-editor label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
+  margin-top: 1rem;
 }
 
 .notes-editor textarea {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    min-height: 8rem;
-    padding: 0.75rem;
-    font: inherit;
-    line-height: 1.5;
-    resize: vertical;
+  min-height: 8rem;
 }
 
 .notes-editor-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 .notes-message {
-    margin: 0.75rem 0;
+  margin: 0.75rem 0;
 }
 
 .notes-message.is-error {
-    color: #b42318;
+  color: var(--danger);
 }
 
-/* Dashboard chart */
-.dashboard-main {
-    min-width: 0;
-}
-
-.spending-chart {
-    margin-bottom: 2rem;
-}
-
-.chart-description {
-    margin-top: -0.5rem;
-    margin-bottom: 1rem;
-    opacity: 0.75;
-}
-
-.chart-container {
-    position: relative;
-    width: 100%;
-    max-width: 420px;
-    height: 300px;
-    margin: 0 auto 1rem;
-}
-
-.category-summary {
-    list-style: none;
-    padding: 0;
-    margin: 1rem 0 0;
-}
-
-.category-summary-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.7rem 0;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.category-summary-item:last-child {
-    border-bottom: none;
-}
-
-.category-summary-item strong {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 600px) {
-    .chart-container {
-        height: 260px;
-    }
-
-    .category-summary-item {
-        font-size: 0.95rem;
-    }
-}
-
-/* ==========================================================
-   Monthly budget and spending alerts
-   ========================================================== */
-
-.budget-card {
-    min-width: 0;
-}
-
-.budget-month-label {
-    margin-top: -0.4rem;
-    margin-bottom: 1.2rem;
-    color: var(--muted);
-    font-size: 0.95rem;
-}
-
-.budget-card .field {
-    margin-bottom: 0.75rem;
-}
-
-.budget-card .btn {
-    width: 100%;
-}
-
-.budget-progress-area {
-    margin-top: 1.5rem;
-    padding-top: 1.2rem;
-    border-top: 1px solid var(--line);
-}
-
-.budget-numbers {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.budget-numbers > div {
-    min-width: 0;
-}
-
-.budget-label {
-    display: block;
-    margin-bottom: 0.2rem;
-    color: var(--muted);
-    font-size: 0.9rem;
-}
-
-.budget-numbers strong {
-    display: block;
-    font-family: var(--font-heading);
-    font-size: clamp(1rem, 4vw, 1.35rem);
-    overflow-wrap: anywhere;
-    font-variant-numeric: tabular-nums;
-}
-
-.budget-remaining-block strong {
-    color: var(--success);
-}
-
-.budget-progress-track {
-    width: 100%;
-    height: 12px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: var(--line);
-}
-
-.budget-progress-bar {
-    width: 0;
-    height: 100%;
-    border-radius: inherit;
-    background: var(--success);
-    transition: width 0.25s ease;
-}
-
-.budget-progress-bar.is-warning {
-    background: #c58a16;
-}
-
-.budget-progress-bar.is-over-budget {
-    background: var(--danger);
-}
-
-.budget-percent {
-    margin-top: 0.6rem;
-    color: var(--muted);
-    font-size: 0.9rem;
-}
-
-.budget-alert {
-    margin-top: 0.75rem;
-    padding: 0.75rem;
-    border-radius: 10px;
-    background: var(--success-soft);
-    color: var(--success);
-    font-size: 0.95rem;
-    overflow-wrap: anywhere;
-}
-
-.budget-alert.is-warning {
-    background: #fff3d6;
-    color: #805400;
-}
-
-.budget-alert.is-over-budget {
-    background: var(--danger-soft);
-    color: var(--danger);
-}
-
-@media (prefers-color-scheme: dark) {
-    .budget-alert.is-warning {
-        background: #453619;
-        color: #ffda82;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .budget-progress-bar {
-        transition: none;
-    }
-}
-
-/* ==========================================================
-   Spending reports page
-   ========================================================== */
-
-/* Balanced summary cards */
+/* Reports page */
 #reports-app .dashboard {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
 }
 
 #reports-app .dashboard > .card {
-    min-width: 0;
+  min-width: 0;
 }
 
 #reports-app .dashboard h2 {
-    font-size: 1.25rem;
-    line-height: 1.3;
+  font-size: 1.25rem;
+  line-height: 1.3;
 }
 
 #reports-app .summary-total {
-    margin-top: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 #reports-app .detail-amount {
-    font-size: clamp(1.5rem, 3vw, 2.5rem);
-    line-height: 1.2;
-    overflow-wrap: anywhere;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  line-height: 1.2;
 }
 
 #reports-app #spending-change-description,
 #reports-app #top-category-total {
-    margin-top: 0.4rem;
-    color: var(--muted);
-    overflow-wrap: anywhere;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
-/* Make the monthly trend chart fit its card */
 #reports-app .spending-chart {
-    min-width: 0;
+  min-width: 0;
 }
 
 #reports-app .chart-container {
-    max-width: none;
-    height: 320px;
-    margin: 1rem 0 0;
+  max-width: none;
+  height: 320px;
+  margin: 1rem 0 0;
 }
 
-/* Improve monthly table spacing and alignment */
 #reports-app table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 0.75rem;
-    text-align: left;
+  width: 100%;
+  margin-top: 0.75rem;
+  border-collapse: collapse;
+  text-align: left;
 }
 
 #reports-app th,
 #reports-app td {
-    padding: 0.85rem 1rem;
-    border-bottom: 1px solid var(--line);
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
 }
 
 #reports-app th {
-    font-weight: 700;
-    white-space: nowrap;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 #reports-app td:nth-child(2),
 #reports-app th:nth-child(2),
 #reports-app td:nth-child(3),
 #reports-app th:nth-child(3) {
-    text-align: right;
-    white-space: nowrap;
+  text-align: right;
+  white-space: nowrap;
 }
 
 #reports-app tbody tr:last-child td {
-    border-bottom: none;
+  border-bottom: none;
 }
 
-/* Tablet and mobile layout */
-@media (max-width: 650px) {
-    #reports-app .dashboard {
-        grid-template-columns: minmax(0, 1fr);
-    }
+/* Responsive layout */
+@media (min-width: 900px) {
+  .dashboard {
+    grid-template-columns: minmax(290px, 370px) minmax(0, 1fr);
+    align-items: start;
+  }
 
-    #reports-app .chart-container {
-        height: 260px;
-    }
-
-    #reports-app th,
-    #reports-app td {
-        padding: 0.7rem 0.55rem;
-        font-size: 0.9rem;
-    }
-}
-
-/* ---------- Spending insights ---------- */
-
-.insights-grid {
+  .dashboard-side {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
+    align-content: start;
+    gap: 1.25rem;
+  }
 }
 
-.insight-item {
-    padding: 1rem;
-    border: 1px solid var(--border-color, #e5e7eb);
-    border-radius: 12px;
-    min-width: 0;
-}
+@media (max-width: 650px) {
+  .site-header {
+    align-items: flex-start;
+  }
 
-.insight-label {
-    display: block;
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
-}
+  .site-header nav {
+    justify-content: flex-start;
+  }
 
-.insight-item strong {
-    display: block;
-    overflow-wrap: anywhere;
-    font-size: 1.15rem;
-}
+  .user-email {
+    width: 100%;
+    max-width: 100%;
+  }
 
-.insight-item p {
-    margin: 0.5rem 0 0;
+  .expense-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .insights-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #reports-app .dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #reports-app .chart-container {
+    height: 260px;
+  }
+
+  #reports-app th,
+  #reports-app td {
+    padding: 0.7rem 0.55rem;
     font-size: 0.9rem;
+  }
 }
 
-@media (max-width: 600px) {
-    .insights-grid {
-        grid-template-columns: 1fr;
-    }
+@media (max-width: 420px) {
+  .container {
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+  }
+
+  .field-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .summary {
+    padding: 1.1rem;
+  }
+
+  .expense,
+  .expense-item {
+    gap: 0.5rem;
+    padding: 0.8rem;
+  }
+
+  .expense-amount {
+    font-size: 1rem;
+  }
+
+  .expense-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+
+  .budget-numbers {
+    gap: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+/* ==========================================================
+   SpendWise — Settings and theme selector additions
+   Add this section at the very bottom of styles.css
+   ========================================================== */
+
+/* Header settings button */
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.settings-toggle {
+  white-space: nowrap;
+}
+
+/* Settings panel */
+.preferences-card {
+  margin-bottom: 1.25rem;
+}
+
+.preferences-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.preferences-heading h2 {
+  margin-bottom: 0.35rem;
+}
+
+.eyebrow {
+  margin-bottom: 0.35rem;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Theme card grid */
+.theme-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.theme-fieldset legend {
+  margin-bottom: 0.8rem;
+  font-weight: 700;
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 2px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.theme-option:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.theme-option[aria-pressed="true"] {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+.theme-option:focus-visible,
+.quick-theme-option:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.theme-option strong {
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.theme-option small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* Small color previews inside the theme cards */
+.theme-preview {
+  display: flex;
+  gap: 0.3rem;
+  min-height: 48px;
+  align-items: center;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--paper);
+}
+
+.theme-preview span {
+  display: block;
+  width: 25px;
+  height: 25px;
+  border-radius: 7px;
+}
+
+.preview-default span:nth-child(1) {
+  background: #f3f5f7;
+  border: 1px solid #d5dce3;
+}
+
+.preview-default span:nth-child(2) {
+  background: #2b3bd1;
+}
+
+.preview-default span:nth-child(3) {
+  background: #14202b;
+}
+
+.preview-bright span:nth-child(1) {
+  background: #fff4fa;
+  border: 1px solid #f0cce5;
+}
+
+.preview-bright span:nth-child(2) {
+  background: #c026d3;
+}
+
+.preview-bright span:nth-child(3) {
+  background: #3d174f;
+}
+
+.preview-classic span:nth-child(1) {
+  background: #f4efe6;
+  border: 1px solid #ded2c1;
+}
+
+.preview-classic span:nth-child(2) {
+  background: #76502e;
+}
+
+.preview-classic span:nth-child(3) {
+  background: #30271e;
+}
+
+.preview-calm span:nth-child(1) {
+  background: #edf6f5;
+  border: 1px solid #c9e0dc;
+}
+
+.preview-calm span:nth-child(2) {
+  background: #287d78;
+}
+
+.preview-calm span:nth-child(3) {
+  background: #193b3b;
+}
+
+.preview-high-contrast span:nth-child(1) {
+  background: #ffffff;
+  border: 1px solid #555555;
+}
+
+.preview-high-contrast span:nth-child(2) {
+  background: #0037c8;
+}
+
+.preview-high-contrast span:nth-child(3) {
+  background: #000000;
+}
+
+.preview-midnight span:nth-child(1) {
+  background: #101827;
+  border: 1px solid #35445c;
+}
+
+.preview-midnight span:nth-child(2) {
+  background: #9aaeff;
+}
+
+.preview-midnight span:nth-child(3) {
+  background: #f1f5ff;
+}
+
+/* Dashboard quick theme selector */
+.quick-theme-card {
+  min-width: 0;
+}
+
+.quick-theme-heading {
+  margin-bottom: 0.85rem;
+}
+
+.quick-theme-heading h2 {
+  margin-bottom: 0.35rem;
+}
+
+.quick-theme-heading p {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.quick-theme-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.quick-theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 0;
+  min-height: 76px;
+  padding: 0.55rem 0.3rem;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.quick-theme-option:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.quick-theme-option[aria-pressed="true"] {
+  border: 2px solid var(--primary);
+  background: var(--primary-soft);
+  font-weight: 700;
+}
+
+.quick-theme-option span:last-child {
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.quick-theme-swatch {
+  display: block;
+  width: 25px;
+  height: 25px;
+  border: 1px solid rgb(127 127 127 / 35%);
+  border-radius: 50%;
+}
+
+.quick-swatch-default {
+  background: linear-gradient(135deg, #f3f5f7 50%, #2b3bd1 50%);
+}
+
+.quick-swatch-bright {
+  background: linear-gradient(135deg, #fff4fa 50%, #c026d3 50%);
+}
+
+.quick-swatch-classic {
+  background: linear-gradient(135deg, #f4efe6 50%, #76502e 50%);
+}
+
+.quick-swatch-calm {
+  background: linear-gradient(135deg, #edf6f5 50%, #287d78 50%);
+}
+
+.quick-swatch-high-contrast {
+  background: linear-gradient(135deg, #ffffff 50%, #000000 50%);
+}
+
+.quick-swatch-midnight {
+  background: linear-gradient(135deg, #101827 50%, #9aaeff 50%);
+}
+
+#quick-theme-message {
+  margin-top: 0.75rem;
+}
+
+/* Fix the notes preview line clamp */
+.expense-notes-preview {
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+}
+
+/* Responsive theme cards */
+@media (max-width: 650px) {
+  .theme-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .preferences-heading {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .theme-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quick-theme-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .theme-option {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .theme-option .theme-preview {
+    flex: 0 0 110px;
+  }
+
+  .theme-option > span:last-child {
+    min-width: 0;
+  }
+}
+
+/* SpendWise theme preview color fixes */
+
+.theme-preview {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    min-height: 48px;
+    padding: 8px;
+    overflow: hidden;
+    border-radius: 9px;
+}
+
+.theme-preview span {
+    display: block;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 6px;
+    border: 1px solid rgb(127 127 127 / 30%);
+}
+
+/* Default */
+.theme-preview-default span:nth-child(1) {
+    background: #f3f5f7;
+}
+.theme-preview-default span:nth-child(2) {
+    background: #2b3bd1;
+}
+.theme-preview-default span:nth-child(3) {
+    background: #14202b;
+}
+
+/* Bright */
+.theme-preview-youthful span:nth-child(1) {
+    background: #fff4fa;
+}
+.theme-preview-youthful span:nth-child(2) {
+    background: #c026d3;
+}
+.theme-preview-youthful span:nth-child(3) {
+    background: #3d174f;
+}
+
+/* Classic */
+.theme-preview-classic span:nth-child(1) {
+    background: #f4efe6;
+}
+.theme-preview-classic span:nth-child(2) {
+    background: #76502e;
+}
+.theme-preview-classic span:nth-child(3) {
+    background: #30271e;
+}
+
+/* Calm */
+.theme-preview-calm span:nth-child(1) {
+    background: #edf6f5;
+}
+.theme-preview-calm span:nth-child(2) {
+    background: #287d78;
+}
+.theme-preview-calm span:nth-child(3) {
+    background: #193b3b;
+}
+
+/* High Contrast */
+.theme-preview-high-contrast span:nth-child(1) {
+    background: #ffffff;
+}
+.theme-preview-high-contrast span:nth-child(2) {
+    background: #0037c8;
+}
+.theme-preview-high-contrast span:nth-child(3) {
+    background: #000000;
+}
+
+/* Midnight Navy */
+.theme-preview-midnight span:nth-child(1) {
+    background: #101827;
+}
+.theme-preview-midnight span:nth-child(2) {
+    background: #9aaeff;
+}
+.theme-preview-midnight span:nth-child(3) {
+    background: #f1f5ff;
+}
+
+
+/* =========================================================
+   Collapsible expense list, Reports link, Log out in Settings
+   (uses the existing theme variables and .btn styles, so all
+   six themes are covered automatically)
+========================================================= */
+
+.expenses-toggle-row {
+  margin: 0 0 0.75rem;
+}
+
+.expenses-toggle-row .btn {
+  min-width: 0;
+}
+
+.settings-logout-row {
+  margin: 0.25rem 0 1.5rem;
+}
+
+@media (max-width: 650px) {
+  .expenses-toggle-row .btn {
+    width: 100%;
+  }
+
+  .settings-logout-row .btn {
+    width: 100%;
+  }
 }

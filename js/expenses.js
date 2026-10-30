@@ -2,78 +2,98 @@ import { supabase } from "./supabaseClient.js";
 import { requireSession, signOut } from "./auth.js";
 import { CURRENCY_CODE } from "./config.js";
 
-// ---------- Settings ----------
-
 const CATEGORIES = [
-    "Food",
-    "Transport",
-    "Education",
-    "Rent and bills",
-    "Shopping",
-    "Health",
-    "Entertainment",
-    "Other",
+  "Food",
+  "Transport",
+  "Education",
+  "Rent and bills",
+  "Shopping",
+  "Health",
+  "Entertainment",
+  "Other"
 ];
 
-const $ = (id) => document.getElementById(id);
+const VALID_THEMES = [
+  "default",
+  "youthful",
+  "classic",
+  "calm",
+  "high_contrast",
+  "midnight_navy"
+];
+
+// How many expenses the list shows before the "View all" button is used.
+const COLLAPSED_EXPENSE_COUNT = 5;
 
 const els = {
-    loading: $("loading"),
-    app: $("app"),
-    userEmail: $("user-email"),
-    logoutBtn: $("logout-btn"),
+  loading: document.getElementById("loading"),
+  app: document.getElementById("app"),
+  userEmail: document.getElementById("user-email"),
+  logoutBtn: document.getElementById("logout-btn"),
 
-    monthTotal: $("month-total"),
-    monthCount: $("month-count"),
+  monthTotal: document.getElementById("month-total"),
+  monthCount: document.getElementById("month-count"),
 
-    budgetMonthLabel: $("budget-month-label"),
-    budgetForm: $("budget-form"),
-    budgetAmount: $("budget-amount"),
-    budgetSaveBtn: $("budget-save-btn"),
-    budgetMessage: $("budget-message"),
-    budgetProgressArea: $("budget-progress-area"),
-    budgetSpent: $("budget-spent"),
-    budgetRemaining: $("budget-remaining"),
-    budgetProgressTrack: $("budget-progress-track"),
-    budgetProgressBar: $("budget-progress-bar"),
-    budgetPercent: $("budget-percent"),
-    budgetAlert: $("budget-alert"),
+  budgetMonthLabel: document.getElementById("budget-month-label"),
+  budgetAmount: document.getElementById("budget-amount"),
+  budgetForm: document.getElementById("budget-form"),
+  budgetMessage: document.getElementById("budget-message"),
+  budgetProgressArea: document.getElementById("budget-progress-area"),
+  budgetSpent: document.getElementById("budget-spent"),
+  budgetRemaining: document.getElementById("budget-remaining"),
+  budgetProgressTrack: document.getElementById("budget-progress-track"),
+  budgetProgressBar: document.getElementById("budget-progress-bar"),
+  budgetPercent: document.getElementById("budget-percent"),
+  budgetAlert: document.getElementById("budget-alert"),
 
-    formTitle: $("form-title"),
-    form: $("expense-form"),
-    title: $("title"),
-    amount: $("amount"),
-    date: $("expense_date"),
-    category: $("category"),
-    notes: $("notes"),
-    saveBtn: $("save-btn"),
-    cancelBtn: $("cancel-btn"),
-    formMessage: $("form-message"),
+  form: document.getElementById("expense-form"),
+  formTitle: document.getElementById("form-title"),
+  title: document.getElementById("title"),
+  amount: document.getElementById("amount"),
+  category: document.getElementById("category"),
+  date: document.getElementById("expense_date"),
+  notes: document.getElementById("notes"),
+  saveBtn: document.getElementById("save-btn"),
+  cancelBtn: document.getElementById("cancel-btn"),
+  formMessage: document.getElementById("form-message"),
 
-    listMessage: $("list-message"),
-    emptyState: $("empty-state"),
-    list: $("expense-list"),
+  list: document.getElementById("expense-list"),
+  listMessage: document.getElementById("list-message"),
+  emptyState: document.getElementById("empty-state"),
+  toggleExpensesRow: document.getElementById("expenses-toggle-row"),
+  toggleExpensesBtn: document.getElementById("toggle-expenses-btn"),
+  toggleExpensesIcon: document.getElementById("toggle-expenses-icon"),
+  toggleExpensesLabel: document.getElementById("toggle-expenses-label"),
 
-    search: $("search-expenses"),
-    filterCategory: $("filter-category"),
-    filterFrom: $("filter-from"),
-    filterTo: $("filter-to"),
-    clearFilters: $("clear-filters"),
-    exportExpenses: $("export-expenses"),
-    filterCount: $("filter-count"),
-    filterError: $("filter-error"),
+  search: document.getElementById("search-expenses"),
+  filterCategory: document.getElementById("filter-category"),
+  filterFrom: document.getElementById("filter-from"),
+  filterTo: document.getElementById("filter-to"),
+  clearFiltersBtn: document.getElementById("clear-filters"),
+  exportBtn: document.getElementById("export-expenses"),
+  filterCount: document.getElementById("filter-count"),
+  filterError: document.getElementById("filter-error"),
 
-    insightTopCategory: $("insight-top-category"),
-    insightTopCategoryDetail: $("insight-top-category-detail"),
-    insightMonthChange: $("insight-month-change"),
-    insightMonthChangeDetail: $("insight-month-change-detail"),
-    insightMessage: $("insight-message"),
+  chartContainer: document.getElementById("chart-container"),
+  chart: document.getElementById("category-chart"),
+  chartEmpty: document.getElementById("chart-empty"),
+  chartError: document.getElementById("chart-error"),
+  categorySummary: document.getElementById("category-summary"),
 
-    chartContainer: $("chart-container"),
-    chartCanvas: $("category-chart"),
-    chartEmpty: $("chart-empty"),
-    chartError: $("chart-error"),
-    categorySummary: $("category-summary"),
+  insightTopCategory: document.getElementById("insight-top-category"),
+  insightTopCategoryDetail: document.getElementById("insight-top-category-detail"),
+  insightMonthChange: document.getElementById("insight-month-change"),
+  insightMonthChangeDetail: document.getElementById("insight-month-change-detail"),
+  insightMessage: document.getElementById("insight-message"),
+
+  preferencesToggle: document.getElementById("preferences-toggle"),
+  preferencesCard: document.getElementById("preferences-card"),
+  preferencesForm: document.getElementById("preferences-form"),
+  themeChoice: document.getElementById("theme-choice"),
+  preferencesMessage: document.getElementById("preferences-message"),
+  closePreferencesBtn: document.getElementById("close-preferences-btn"),
+  themeButtons: document.querySelectorAll("[data-theme-choice]"),
+  quickThemeMessage: document.getElementById("quick-theme-message")
 };
 
 let session = null;
@@ -82,957 +102,1311 @@ let currentBudget = null;
 let editingId = null;
 let categoryChart = null;
 let searchDebounceId = null;
+let savedPreferences = null;
+let preferencesLoaded = false;
+let showAllExpenses = false; // display only: false = newest five, true = every match
 
-// ---------- Money and date helpers ----------
+/* =========================================================
+   GENERAL HELPERS
+========================================================= */
 
-function makeMoneyFormatter() {
-    try {
-        return new Intl.NumberFormat(undefined, {
-            style: "currency",
-            currency: CURRENCY_CODE,
-        });
-    } catch {
-        return new Intl.NumberFormat(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
-    }
+function money(value) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: CURRENCY_CODE || "INR",
+    maximumFractionDigits: 2
+  }).format(Number(value) || 0);
 }
 
-const money = makeMoneyFormatter();
-
 function todayString() {
-    const date = new Date();
+  const now = new Date();
 
-    return [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, "0"),
-        String(date.getDate()).padStart(2, "0"),
-    ].join("-");
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0")
+  ].join("-");
 }
 
 function currentMonthStart() {
-    return todayString().slice(0, 7) + "-01";
-}
+  const now = new Date();
 
-function formatMonthLabel() {
-    return new Date().toLocaleDateString(undefined, {
-        month: "long",
-        year: "numeric",
-    });
-}
-
-function formatDate(isoDate) {
-    const [year, month, day] = isoDate.split("-").map(Number);
-
-    return new Date(year, month - 1, day).toLocaleDateString(
-        undefined,
-        {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-        }
-    );
-}
-
-function showMessage(element, text, type) {
-    if (!element) return;
-
-    element.textContent = text;
-    element.className =
-        "message" +
-        (text ? (type === "error" ? " is-error" : " is-success") : "");
-}
-
-function prefersReducedMotion() {
-    return window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-    ).matches;
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    "01"
+  ].join("-");
 }
 
 function getMonthPrefix(date = new Date()) {
-    return [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, "0"),
-    ].join("-");
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0")
+  ].join("-");
 }
 
-// ---------- Monthly statistics ----------
-
-// Calculate monthly totals and category totals together.
-// This avoids repeatedly filtering the same expense array.
-
-function calculateMonthlyStats() {
-    const currentPrefix = getMonthPrefix();
-    const previousDate = new Date();
-    previousDate.setDate(1);
-    previousDate.setMonth(previousDate.getMonth() - 1);
-
-    const previousPrefix = getMonthPrefix(previousDate);
-
-    const stats = {
-        currentCount: 0,
-        currentTotal: 0,
-        previousCount: 0,
-        previousTotal: 0,
-        categoryTotals: new Map(),
-    };
-
-    for (const expense of expenses) {
-        const amount = Number(expense.amount);
-        const date = expense.expense_date;
-
-        if (date.startsWith(currentPrefix)) {
-            stats.currentCount += 1;
-            stats.currentTotal += amount;
-
-            const category = CATEGORIES.includes(expense.category)
-                ? expense.category
-                : "Other";
-
-            stats.categoryTotals.set(
-                category,
-                (stats.categoryTotals.get(category) || 0) + amount
-            );
-        } else if (date.startsWith(previousPrefix)) {
-            stats.previousCount += 1;
-            stats.previousTotal += amount;
-        }
-    }
-
-    return stats;
+function formatMonthLabel() {
+  return new Intl.DateTimeFormat("en-IN", {
+    month: "long",
+    year: "numeric"
+  }).format(new Date());
 }
 
-// ---------- CSV export ----------
+function formatDate(dateString) {
+  if (!dateString) return "No date";
 
-function exportAllExpenses() {
-    if (expenses.length === 0) {
-        showMessage(
-            els.listMessage,
-            "There are no expenses to export yet.",
-            "error"
-        );
-        return;
+  const parts = dateString.split("-");
+
+  if (parts.length !== 3) return dateString;
+
+  const date = new Date(
+    Number(parts[0]),
+    Number(parts[1]) - 1,
+    Number(parts[2])
+  );
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  }).format(date);
+}
+
+function showMessage(element, message, type = "info") {
+  if (!element) return;
+
+  element.textContent = message;
+  element.className = `message ${type}`;
+}
+
+function clearMessage(element) {
+  if (!element) return;
+
+  element.textContent = "";
+  element.className = "message";
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function safelySetText(element, value) {
+  if (element) {
+    element.textContent = value;
+  }
+}
+
+function isValidTheme(theme) {
+  return VALID_THEMES.includes(theme);
+}
+
+/* =========================================================
+   THEMES AND USER PREFERENCES
+========================================================= */
+
+function applyTheme(theme) {
+  const selectedTheme = isValidTheme(theme) ? theme : "default";
+
+  document.documentElement.dataset.theme = selectedTheme;
+  document.body.dataset.theme = selectedTheme;
+
+  try {
+    localStorage.setItem("spendwise-theme", selectedTheme);
+  } catch (error) {
+    // The app can work without local storage.
+  }
+
+  // Keep both theme selectors synchronized.
+  els.themeButtons.forEach((button) => {
+    const isSelected = button.dataset.themeChoice === selectedTheme;
+
+    button.setAttribute("aria-pressed", String(isSelected));
+  });
+
+  if (els.themeChoice) {
+    els.themeChoice.value = selectedTheme;
+  }
+}
+
+function showPreferences(open = true) {
+  if (!els.preferencesCard) return;
+
+  els.preferencesCard.hidden = !open;
+
+  els.preferencesToggle?.setAttribute(
+    "aria-expanded",
+    String(open)
+  );
+
+  if (open) {
+    els.preferencesCard.scrollIntoView({
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+      block: "nearest"
+    });
+  }
+}
+
+async function loadPreferences() {
+  if (!session?.user?.id) return;
+
+  try {
+    const { data, error } = await supabase
+      .from("user_preferences")
+      .select("user_id, theme")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    savedPreferences = data || null;
+
+    let theme = isValidTheme(data?.theme)
+      ? data.theme
+      : null;
+
+    if (!theme) {
+      try {
+        const localTheme = localStorage.getItem("spendwise-theme");
+
+        theme = isValidTheme(localTheme)
+          ? localTheme
+          : "default";
+      } catch (storageError) {
+        theme = "default";
+      }
     }
 
-    const columns = ["Title", "Amount", "Category", "Date", "Notes"];
+    applyTheme(theme);
+    showPreferences(false);
+    preferencesLoaded = true;
+  } catch (error) {
+    console.error("Could not load preferences:", error);
 
-    function escapeCSV(value) {
-        let text = String(value ?? "");
+    let localTheme = "default";
 
-        // Reduce spreadsheet formula-injection risk.
-        if (/^[\t\r ]*[=+\-@]/.test(text)) {
-            text = "'" + text;
-        }
+    try {
+      const storedTheme = localStorage.getItem("spendwise-theme");
 
-        return `"${text.replace(/"/g, '""')}"`;
+      if (isValidTheme(storedTheme)) {
+        localTheme = storedTheme;
+      }
+    } catch (storageError) {
+      // Use the default theme.
     }
 
-    const rows = expenses.map((expense) => [
-        expense.title,
-        Number(expense.amount).toFixed(2),
-        expense.category,
-        expense.expense_date,
-        expense.notes || "",
-    ]);
+    applyTheme(localTheme);
+    showPreferences(false);
+    preferencesLoaded = true;
+  }
+}
 
-    const csvContent = [columns, ...rows]
-        .map((row) => row.map(escapeCSV).join(","))
-        .join("\r\n");
+async function savePreferences(theme) {
+  if (!session?.user?.id) {
+    const message = "Please log in again to save your theme.";
 
-    const blob = new Blob(
-        ["\uFEFF", csvContent],
-        { type: "text/csv;charset=utf-8;" }
-    );
+    showMessage(els.preferencesMessage, message, "error");
+    showMessage(els.quickThemeMessage, message, "error");
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    return false;
+  }
 
-    link.href = url;
-    link.download = `SpendWise-expenses-${todayString()}.csv`;
+  if (!isValidTheme(theme)) return false;
 
-    document.body.append(link);
-    link.click();
-    link.remove();
+  const record = {
+    user_id: session.user.id,
+    theme,
+    onboarding_completed: true,
+    updated_at: new Date().toISOString()
+  };
 
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  els.themeButtons.forEach((button) => {
+    button.disabled = true;
+  });
+
+  try {
+    const { error } = await supabase
+      .from("user_preferences")
+      .upsert(record, {
+        onConflict: "user_id"
+      });
+
+    if (error) throw error;
+
+    savedPreferences = record;
+    preferencesLoaded = true;
+
+    applyTheme(theme);
 
     showMessage(
-        els.listMessage,
-        `Exported ${expenses.length} expenses to CSV.`,
-        "success"
+      els.preferencesMessage,
+      "Your theme has been saved.",
+      "success"
     );
+
+    showMessage(
+      els.quickThemeMessage,
+      "Theme saved successfully!",
+      "success"
+    );
+
+    return true;
+  } catch (error) {
+    console.error("Could not save theme:", error);
+
+    showMessage(
+      els.preferencesMessage,
+      "We couldn't save your theme. Please try again.",
+      "error"
+    );
+
+    showMessage(
+      els.quickThemeMessage,
+      "We couldn't save your theme. Please try again.",
+      "error"
+    );
+
+    return false;
+  } finally {
+    els.themeButtons.forEach((button) => {
+      button.disabled = false;
+    });
+  }
 }
 
-// ---------- Search and filtering ----------
+function setupPreferences() {
+  els.preferencesToggle?.addEventListener("click", async () => {
+    const currentlyOpen =
+      els.preferencesCard && !els.preferencesCard.hidden;
+
+    if (!preferencesLoaded) {
+      await loadPreferences();
+    }
+
+    showPreferences(!currentlyOpen);
+    clearMessage(els.preferencesMessage);
+  });
+
+  els.preferencesForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const theme = els.themeChoice?.value || "default";
+
+    showMessage(
+      els.preferencesMessage,
+      "Saving your theme...",
+      "info"
+    );
+
+    const saved = await savePreferences(theme);
+
+    if (saved) {
+      showPreferences(false);
+    }
+  });
+
+  els.closePreferencesBtn?.addEventListener("click", () => {
+    showPreferences(false);
+    clearMessage(els.preferencesMessage);
+  });
+
+  els.themeButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const theme = button.dataset.themeChoice;
+
+      if (!isValidTheme(theme)) return;
+
+      // Apply the theme immediately.
+      applyTheme(theme);
+
+      showMessage(
+        els.preferencesMessage,
+        "Saving your theme...",
+        "info"
+      );
+
+      showMessage(
+        els.quickThemeMessage,
+        "Saving your theme...",
+        "info"
+      );
+
+      await savePreferences(theme);
+    });
+  });
+}
+
+/* =========================================================
+   MONTHLY STATISTICS
+========================================================= */
+
+function calculateMonthlyStats() {
+  const currentMonth = getMonthPrefix(new Date());
+
+  const previousDate = new Date();
+  previousDate.setDate(1);
+  previousDate.setMonth(previousDate.getMonth() - 1);
+
+  const previousMonth = getMonthPrefix(previousDate);
+
+  let currentTotal = 0;
+  let previousTotal = 0;
+  let currentCount = 0;
+
+  const categoryTotals = {};
+
+  for (const expense of expenses) {
+    const month = (expense.expense_date || "").slice(0, 7);
+    const amount = Number(expense.amount) || 0;
+
+    if (month === currentMonth) {
+      currentTotal += amount;
+      currentCount += 1;
+
+      categoryTotals[expense.category] =
+        (categoryTotals[expense.category] || 0) + amount;
+    }
+
+    if (month === previousMonth) {
+      previousTotal += amount;
+    }
+  }
+
+  return {
+    currentMonth,
+    previousMonth,
+    currentTotal,
+    previousTotal,
+    currentCount,
+    categoryTotals
+  };
+}
+
+/* =========================================================
+   CSV EXPORT
+========================================================= */
+
+function escapeCSV(value) {
+  let text = String(value ?? "");
+
+  // Protect against spreadsheet formula injection.
+  if (/^[\s]*[=+\-@]/.test(text)) {
+    text = `'${text}`;
+  }
+
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function exportAllExpenses() {
+  if (!expenses.length) {
+    showMessage(
+      els.listMessage,
+      "There are no expenses to export yet.",
+      "info"
+    );
+    return;
+  }
+
+  const headers = ["Title", "Amount", "Category", "Date", "Notes"];
+
+  const rows = expenses.map((expense) => [
+    expense.title,
+    expense.amount,
+    expense.category,
+    expense.expense_date,
+    expense.notes || ""
+  ]);
+
+  const csv = [
+    headers.map(escapeCSV).join(","),
+    ...rows.map((row) => row.map(escapeCSV).join(","))
+  ].join("\r\n");
+
+  const blob = new Blob(["\uFEFF" + csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `spendwise-expenses-${todayString()}.csv`;
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+
+  showMessage(
+    els.listMessage,
+    "Your expense CSV has been exported.",
+    "success"
+  );
+}
+
+/* =========================================================
+   SEARCH AND FILTERING
+========================================================= */
 
 function getFilteredExpenses() {
-    const searchText = els.search.value.trim().toLowerCase();
-    const selectedCategory = els.filterCategory.value;
-    const fromDate = els.filterFrom.value;
-    const toDate = els.filterTo.value;
+  const searchTerm = (els.search?.value || "").trim().toLowerCase();
+  const selectedCategory = els.filterCategory?.value || "";
+  const fromDate = els.filterFrom?.value || "";
+  const toDate = els.filterTo?.value || "";
 
-    return expenses.filter((expense) => {
-        const title = String(expense.title || "").toLowerCase();
+  return expenses.filter((expense) => {
+    const title = (expense.title || "").toLowerCase();
+    const category = (expense.category || "").toLowerCase();
+    const notes = (expense.notes || "").toLowerCase();
 
-        return (
-            title.includes(searchText) &&
-            (!selectedCategory ||
-                expense.category === selectedCategory) &&
-            (!fromDate || expense.expense_date >= fromDate) &&
-            (!toDate || expense.expense_date <= toDate)
-        );
-    });
+    const matchesSearch =
+      !searchTerm ||
+      title.includes(searchTerm) ||
+      category.includes(searchTerm) ||
+      notes.includes(searchTerm);
+
+    const matchesCategory =
+      !selectedCategory || expense.category === selectedCategory;
+
+    const matchesFrom =
+      !fromDate || expense.expense_date >= fromDate;
+
+    const matchesTo =
+      !toDate || expense.expense_date <= toDate;
+
+    return matchesSearch && matchesCategory && matchesFrom && matchesTo;
+  });
+}
+
+function createElement(tag, className, text) {
+  const element = document.createElement(tag);
+
+  if (className) element.className = className;
+
+  if (text !== undefined && text !== null) {
+    element.textContent = text;
+  }
+
+  return element;
+}
+
+// Returns a sorted COPY (newest date first). The loaded data is never changed.
+function sortNewestFirst(list) {
+  return [...list].sort((a, b) => {
+    const byDate = (b.expense_date || "").localeCompare(a.expense_date || "");
+
+    if (byDate !== 0) return byDate;
+
+    return (b.created_at || "").localeCompare(a.created_at || "");
+  });
+}
+
+// Shows the expand/collapse button only when more than five expenses match.
+function updateExpensesToggle(matchCount) {
+  if (!els.toggleExpensesRow || !els.toggleExpensesBtn) return;
+
+  const needsToggle = matchCount > COLLAPSED_EXPENSE_COUNT;
+
+  els.toggleExpensesRow.hidden = !needsToggle;
+
+  if (!needsToggle) return;
+
+  els.toggleExpensesBtn.setAttribute("aria-expanded", String(showAllExpenses));
+
+  safelySetText(els.toggleExpensesIcon, showAllExpenses ? "⌃" : "⌄");
+
+  safelySetText(
+    els.toggleExpensesLabel,
+    showAllExpenses ? "Show less" : `View all expenses (${matchCount})`
+  );
+}
+
+function toggleExpensesList() {
+  showAllExpenses = !showAllExpenses;
+  renderFilteredExpenses();
 }
 
 function renderFilteredExpenses() {
-    const fromDate = els.filterFrom.value;
-    const toDate = els.filterTo.value;
+  if (!els.list) return;
 
-    if (fromDate && toDate && fromDate > toDate) {
-        els.list.replaceChildren();
-        els.emptyState.hidden = true;
-        els.filterCount.textContent = "";
+  const filteredExpenses = sortNewestFirst(getFilteredExpenses());
 
-        showMessage(
-            els.filterError,
-            "The start date must be on or before the end date.",
-            "error"
-        );
-        return;
-    }
+  updateExpensesToggle(filteredExpenses.length);
 
-    showMessage(els.filterError, "", "error");
+  els.list.replaceChildren();
 
-    const filteredExpenses = getFilteredExpenses();
-    const count = filteredExpenses.length;
-    const total = expenses.length;
-
+  if (els.filterCount) {
     els.filterCount.textContent =
-        count === total
-            ? `${total} ${total === 1 ? "expense" : "expenses"}`
-            : `Showing ${count} of ${total} expenses`;
+      `${filteredExpenses.length} of ${expenses.length} expenses`;
+  }
 
-    els.emptyState.hidden = total > 0;
-    els.list.replaceChildren();
+  if (!filteredExpenses.length) {
+    const message = expenses.length
+      ? "No expenses match your search or filters."
+      : "No expenses yet. Add your first expense using the form.";
 
-    if (total > 0 && count === 0) {
-        els.filterCount.textContent =
-            "No expenses match your search or filters.";
+    showMessage(els.listMessage, message, "info");
+
+    if (els.emptyState) {
+      els.emptyState.hidden = false;
+      els.emptyState.textContent = message;
     }
 
-    // Build the list off-screen, then insert it once.
-    const fragment = document.createDocumentFragment();
+    return;
+  }
 
-    for (const expense of filteredExpenses) {
-        const item = document.createElement("li");
-        item.className = "expense";
+  clearMessage(els.listMessage);
 
-        const title = document.createElement("h3");
-        title.className = "expense-title";
-        title.textContent = expense.title;
+  if (els.emptyState) {
+    els.emptyState.hidden = true;
+  }
 
-        const amount = document.createElement("p");
-        amount.className = "expense-amount";
-        amount.textContent = money.format(Number(expense.amount));
+  const visibleExpenses = showAllExpenses
+    ? filteredExpenses
+    : filteredExpenses.slice(0, COLLAPSED_EXPENSE_COUNT);
 
-        const meta = document.createElement("p");
-        meta.className = "expense-meta";
+  for (const expense of visibleExpenses) {
+    const item = createElement("article", "expense-item");
+    const details = createElement("div", "expense-info");
 
-        const chip = document.createElement("span");
-        chip.className = "chip";
-        chip.textContent = expense.category || "Other";
+    const title = createElement("h3", "expense-title", expense.title);
 
-        const date = document.createElement("span");
-        date.textContent = formatDate(expense.expense_date);
+    const meta = createElement(
+      "p",
+      "expense-meta",
+      `${expense.category} • ${formatDate(expense.expense_date)}`
+    );
 
-        meta.append(chip, date);
-        item.append(title, amount, meta);
+    const amount = createElement(
+      "p",
+      "expense-amount",
+      money(expense.amount)
+    );
 
-        if (expense.notes) {
-            const notes = document.createElement("p");
-            notes.className = "expense-notes";
-            notes.textContent = expense.notes;
-            item.append(notes);
-        }
+    details.append(title, meta);
 
-        const actions = document.createElement("div");
-        actions.className = "expense-actions";
-
-        const viewLink = document.createElement("a");
-        viewLink.className = "btn btn-secondary btn-small";
-        viewLink.href =
-            "expense-details.html?id=" +
-            encodeURIComponent(expense.id);
-        viewLink.textContent = "View details";
-        viewLink.setAttribute(
-            "aria-label",
-            `View details for ${expense.title}`
-        );
-
-        const editBtn = document.createElement("button");
-        editBtn.type = "button";
-        editBtn.className = "btn btn-secondary btn-small";
-        editBtn.textContent = "Edit";
-        editBtn.setAttribute("aria-label", `Edit ${expense.title}`);
-        editBtn.addEventListener("click", () => startEdit(expense));
-
-        const deleteBtn = document.createElement("button");
-        deleteBtn.type = "button";
-        deleteBtn.className = "btn btn-danger btn-small";
-        deleteBtn.textContent = "Delete";
-        deleteBtn.setAttribute("aria-label", `Delete ${expense.title}`);
-        deleteBtn.addEventListener("click", () => deleteExpense(expense));
-
-        actions.append(viewLink, editBtn, deleteBtn);
-        item.append(actions);
-        fragment.append(item);
+    if (expense.notes) {
+      details.append(
+        createElement("p", "expense-notes-preview", expense.notes)
+      );
     }
 
-    els.list.append(fragment);
+    const actions = createElement("div", "expense-actions");
+
+    const viewLink = createElement(
+      "a",
+      "btn btn-secondary",
+      "View details"
+    );
+
+    viewLink.href =
+      `expense-details.html?id=${encodeURIComponent(expense.id)}`;
+
+    const editButton = createElement("button", "btn btn-secondary", "Edit");
+    editButton.type = "button";
+    editButton.addEventListener("click", () => startEdit(expense.id));
+
+    const deleteButton = createElement("button", "btn btn-danger", "Delete");
+    deleteButton.type = "button";
+    deleteButton.addEventListener("click", () => deleteExpense(expense.id));
+
+    actions.append(viewLink, editButton, deleteButton);
+    item.append(details, amount, actions);
+    els.list.append(item);
+  }
 }
 
-function debouncedRenderFilteredExpenses() {
-    window.clearTimeout(searchDebounceId);
-
-    searchDebounceId = window.setTimeout(() => {
-        renderFilteredExpenses();
-    }, 200);
+function debounce(callback, delay = 250) {
+  window.clearTimeout(searchDebounceId);
+  searchDebounceId = window.setTimeout(callback, delay);
 }
 
 function clearFilters() {
-    els.search.value = "";
-    els.filterCategory.value = "";
-    els.filterFrom.value = "";
-    els.filterTo.value = "";
+  if (els.search) els.search.value = "";
+  if (els.filterCategory) els.filterCategory.value = "";
+  if (els.filterFrom) els.filterFrom.value = "";
+  if (els.filterTo) els.filterTo.value = "";
 
-    showMessage(els.filterError, "", "error");
-    renderFilteredExpenses();
+  clearMessage(els.filterError);
+  renderFilteredExpenses();
 }
 
 function setupFilters() {
-    for (const name of CATEGORIES) {
+  els.search?.addEventListener("input", () => {
+    debounce(renderFilteredExpenses);
+  });
+
+  [
+    els.filterCategory,
+    els.filterFrom,
+    els.filterTo
+  ].forEach((element) => {
+    element?.addEventListener("change", renderFilteredExpenses);
+  });
+
+  els.clearFiltersBtn?.addEventListener("click", clearFilters);
+  els.exportBtn?.addEventListener("click", exportAllExpenses);
+  els.toggleExpensesBtn?.addEventListener("click", toggleExpensesList);
+}
+
+/* =========================================================
+   LOAD EXPENSES AND BUDGET
+========================================================= */
+
+async function loadExpenses() {
+  const { data, error } = await supabase
+    .from("expenses")
+    .select("id, title, amount, category, expense_date, notes, created_at")
+    .eq("user_id", session.user.id)
+    .order("expense_date", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Could not load expenses:", error);
+    throw error;
+  }
+
+  expenses = data || [];
+}
+
+async function loadBudget() {
+  const month = currentMonthStart();
+
+  const { data, error } = await supabase
+    .from("budgets")
+    .select("id, user_id, budget_month, amount")
+    .eq("user_id", session.user.id)
+    .eq("budget_month", month)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  currentBudget = data || null;
+
+  if (els.budgetAmount) {
+    els.budgetAmount.value = currentBudget ? currentBudget.amount : "";
+  }
+}
+
+/* =========================================================
+   MONTHLY BUDGET
+========================================================= */
+
+function renderBudget() {
+  const stats = calculateMonthlyStats();
+  const spent = stats.currentTotal;
+  const budget = Number(currentBudget?.amount) || 0;
+
+  if (!budget) {
+    if (els.budgetProgressArea) {
+      els.budgetProgressArea.hidden = true;
+    }
+
+    safelySetText(els.budgetSpent, money(0));
+    safelySetText(els.budgetRemaining, money(0));
+
+    safelySetText(
+      els.budgetPercent,
+      "Set a budget to track spending."
+    );
+
+    if (els.budgetAlert) {
+      els.budgetAlert.hidden = true;
+      els.budgetAlert.textContent = "";
+    }
+
+    if (els.budgetProgressBar) {
+      els.budgetProgressBar.style.width = "0%";
+    }
+
+    els.budgetProgressTrack?.setAttribute("aria-valuenow", "0");
+
+    return;
+  }
+
+  const percentage = (spent / budget) * 100;
+  const displayedPercentage = Math.min(percentage, 100);
+  const remaining = budget - spent;
+
+  if (els.budgetProgressArea) {
+    els.budgetProgressArea.hidden = false;
+  }
+
+  if (els.budgetProgressBar) {
+    els.budgetProgressBar.style.width = `${displayedPercentage}%`;
+    els.budgetProgressBar.classList.toggle(
+      "is-warning",
+      percentage >= 80 && percentage < 100
+    );
+    els.budgetProgressBar.classList.toggle(
+      "is-over-budget",
+      percentage >= 100
+    );
+  }
+
+  els.budgetProgressTrack?.setAttribute(
+    "aria-valuenow",
+    String(Math.round(displayedPercentage))
+  );
+
+  safelySetText(els.budgetSpent, money(spent));
+
+  safelySetText(
+    els.budgetPercent,
+    `${percentage.toFixed(1)}% of your monthly budget used`
+  );
+
+  safelySetText(
+    els.budgetRemaining,
+    remaining >= 0
+      ? money(remaining)
+      : `${money(Math.abs(remaining))} over budget`
+  );
+
+  if (els.budgetAlert) {
+    if (percentage >= 100) {
+      els.budgetAlert.hidden = false;
+      els.budgetAlert.className = "budget-alert is-over-budget";
+      els.budgetAlert.textContent =
+        "You have reached or exceeded your monthly budget.";
+    } else if (percentage >= 80) {
+      els.budgetAlert.hidden = false;
+      els.budgetAlert.className = "budget-alert is-warning";
+      els.budgetAlert.textContent =
+        "You've used at least 80% of your monthly budget.";
+    } else {
+      els.budgetAlert.hidden = true;
+      els.budgetAlert.textContent = "";
+      els.budgetAlert.className = "budget-alert";
+    }
+  }
+}
+
+async function saveBudget(event) {
+  event.preventDefault();
+
+  const amount = Number(els.budgetAmount?.value);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showMessage(
+      els.budgetMessage,
+      "Enter a budget amount greater than zero.",
+      "error"
+    );
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("budgets")
+      .upsert(
+        {
+          user_id: session.user.id,
+          budget_month: currentMonthStart(),
+          amount
+        },
+        {
+          onConflict: "user_id,budget_month"
+        }
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    currentBudget = data;
+
+    showMessage(
+      els.budgetMessage,
+      "Your monthly budget has been saved.",
+      "success"
+    );
+
+    renderBudget();
+  } catch (error) {
+    console.error("Could not save budget:", error);
+
+    showMessage(
+      els.budgetMessage,
+      "We couldn't save your budget. Please try again.",
+      "error"
+    );
+  }
+}
+
+/* =========================================================
+   ADD, EDIT, AND DELETE EXPENSES
+========================================================= */
+
+async function saveExpense(event) {
+  event.preventDefault();
+
+  const title = (els.title?.value || "").trim();
+  const amount = Number(els.amount?.value);
+  const category = els.category?.value;
+  const expenseDate = els.date?.value;
+  const notes = (els.notes?.value || "").trim();
+
+  if (!title) {
+    showMessage(els.formMessage, "Enter an expense title.", "error");
+    els.title?.focus();
+    return;
+  }
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showMessage(
+      els.formMessage,
+      "Enter an amount greater than zero.",
+      "error"
+    );
+    els.amount?.focus();
+    return;
+  }
+
+  if (!CATEGORIES.includes(category)) {
+    showMessage(
+      els.formMessage,
+      "Choose a valid expense category.",
+      "error"
+    );
+    els.category?.focus();
+    return;
+  }
+
+  if (!expenseDate) {
+    showMessage(
+      els.formMessage,
+      "Choose the date of the expense.",
+      "error"
+    );
+    els.date?.focus();
+    return;
+  }
+
+  const record = {
+    title,
+    amount,
+    category,
+    expense_date: expenseDate,
+    notes,
+    user_id: session.user.id
+  };
+
+  const wasEditing = editingId !== null;
+
+  try {
+    if (els.saveBtn) {
+      els.saveBtn.disabled = true;
+      els.saveBtn.textContent = wasEditing ? "Updating..." : "Saving...";
+    }
+
+    let error;
+
+    if (wasEditing) {
+      ({ error } = await supabase
+        .from("expenses")
+        .update({
+          title,
+          amount,
+          category,
+          expense_date: expenseDate,
+          notes
+        })
+        .eq("id", editingId)
+        .eq("user_id", session.user.id));
+    } else {
+      ({ error } = await supabase
+        .from("expenses")
+        .insert(record));
+    }
+
+    if (error) throw error;
+
+    showMessage(
+      els.formMessage,
+      wasEditing
+        ? "Expense updated successfully."
+        : "Expense added successfully.",
+      "success"
+    );
+
+    resetForm();
+    await loadExpenses();
+    render();
+  } catch (error) {
+    console.error("Could not save expense:", error);
+
+    showMessage(
+      els.formMessage,
+      "We couldn't save this expense. Please try again.",
+      "error"
+    );
+  } finally {
+    if (els.saveBtn) {
+      els.saveBtn.disabled = false;
+      els.saveBtn.textContent = editingId
+        ? "Update Expense"
+        : "Save Expense";
+    }
+  }
+}
+
+async function deleteExpense(id) {
+  const expense = expenses.find(
+    (item) => String(item.id) === String(id)
+  );
+
+  if (!expense) return;
+
+  if (!window.confirm(`Delete "${expense.title}"? This action cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    const { error } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", session.user.id);
+
+    if (error) throw error;
+
+    expenses = expenses.filter(
+      (item) => String(item.id) !== String(id)
+    );
+
+    if (String(editingId) === String(id)) {
+      resetForm();
+    }
+
+    showMessage(
+      els.listMessage,
+      "Expense deleted successfully.",
+      "success"
+    );
+
+    render();
+  } catch (error) {
+    console.error("Could not delete expense:", error);
+
+    showMessage(
+      els.listMessage,
+      "We couldn't delete this expense. Please try again.",
+      "error"
+    );
+  }
+}
+
+function resetForm() {
+  editingId = null;
+
+  els.form?.reset();
+
+  if (els.date) {
+    els.date.value = todayString();
+  }
+
+  safelySetText(els.formTitle, "Add an expense");
+
+  if (els.saveBtn) {
+    els.saveBtn.textContent = "Save Expense";
+    els.saveBtn.disabled = false;
+  }
+
+  if (els.cancelBtn) {
+    els.cancelBtn.hidden = true;
+  }
+
+  clearMessage(els.formMessage);
+}
+
+function startEdit(id) {
+  const expense = expenses.find(
+    (item) => String(item.id) === String(id)
+  );
+
+  if (!expense) return;
+
+  editingId = expense.id;
+
+  if (els.title) els.title.value = expense.title;
+  if (els.amount) els.amount.value = expense.amount;
+  if (els.category) els.category.value = expense.category;
+  if (els.date) els.date.value = expense.expense_date || todayString();
+  if (els.notes) els.notes.value = expense.notes || "";
+
+  safelySetText(els.formTitle, "Edit expense");
+
+  if (els.saveBtn) {
+    els.saveBtn.textContent = "Update Expense";
+  }
+
+  if (els.cancelBtn) {
+    els.cancelBtn.hidden = false;
+  }
+
+  clearMessage(els.formMessage);
+
+  els.form?.scrollIntoView({
+    behavior: prefersReducedMotion() ? "auto" : "smooth",
+    block: "start"
+  });
+
+  els.title?.focus();
+}
+
+/* =========================================================
+   CATEGORY CHART
+========================================================= */
+
+function renderCategoryChart(categoryTotals) {
+  const labels = Object.keys(categoryTotals);
+  const values = Object.values(categoryTotals);
+  const chartContext = els.chart?.getContext("2d");
+
+  if (categoryChart) {
+    categoryChart.destroy();
+    categoryChart = null;
+  }
+
+  if (els.chartError) {
+    els.chartError.hidden = true;
+    els.chartError.textContent = "";
+  }
+
+  if (!labels.length) {
+    if (els.chartEmpty) {
+      els.chartEmpty.hidden = false;
+    }
+
+    if (els.chartContainer) {
+      els.chartContainer.hidden = true;
+    }
+
+    els.categorySummary?.replaceChildren();
+    return;
+  }
+
+  if (!chartContext || typeof Chart === "undefined") {
+    if (els.chartError) {
+      els.chartError.hidden = false;
+      els.chartError.textContent =
+        "The chart could not be loaded. Please refresh the page.";
+    }
+
+    if (els.chartEmpty) {
+      els.chartEmpty.hidden = true;
+    }
+
+    return;
+  }
+
+  if (els.chartEmpty) {
+    els.chartEmpty.hidden = true;
+  }
+
+  if (els.chartContainer) {
+    els.chartContainer.hidden = false;
+  }
+
+  categoryChart = new Chart(chartContext, {
+    type: "doughnut",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderWidth: 2,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "62%",
+      plugins: {
+        legend: {
+          position: "bottom"
+        },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              return `${context.label || ""}: ${money(Number(context.raw) || 0)}`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (els.categorySummary) {
+    els.categorySummary.replaceChildren();
+
+    labels.forEach((label, index) => {
+      const item = document.createElement("p");
+      item.textContent = `${label}: ${money(values[index])}`;
+      els.categorySummary.appendChild(item);
+    });
+  }
+}
+
+/* =========================================================
+   SPENDING INSIGHTS
+========================================================= */
+
+function renderSpendingInsights(stats) {
+  const currentTotal = stats.currentTotal;
+  const previousTotal = stats.previousTotal;
+
+  const topCategoryEntry = Object.entries(stats.categoryTotals)
+    .sort((a, b) => b[1] - a[1])[0];
+
+  safelySetText(
+    els.insightTopCategory,
+    topCategoryEntry ? topCategoryEntry[0] : "No spending yet"
+  );
+
+  safelySetText(
+    els.insightTopCategoryDetail,
+    topCategoryEntry
+      ? `${money(topCategoryEntry[1])} spent this month`
+      : "Add expenses to discover your top category."
+  );
+
+  if (els.insightMonthChange && els.insightMonthChangeDetail) {
+    if (previousTotal === 0 && currentTotal === 0) {
+      els.insightMonthChange.textContent = "No change yet";
+      els.insightMonthChangeDetail.textContent =
+        "No spending recorded this month or last month.";
+    } else if (previousTotal === 0) {
+      els.insightMonthChange.textContent = "New activity";
+      els.insightMonthChangeDetail.textContent =
+        `You've spent ${money(currentTotal)} this month. There was no spending recorded last month.`;
+    } else {
+      const difference = currentTotal - previousTotal;
+      const percentage = Math.abs(difference / previousTotal) * 100;
+
+      if (difference > 0) {
+        els.insightMonthChange.textContent =
+          `${percentage.toFixed(1)}% increase`;
+        els.insightMonthChangeDetail.textContent =
+          `${money(difference)} more than last month.`;
+      } else if (difference < 0) {
+        els.insightMonthChange.textContent =
+          `${percentage.toFixed(1)}% decrease`;
+        els.insightMonthChangeDetail.textContent =
+          `${money(Math.abs(difference))} less than last month.`;
+      } else {
+        els.insightMonthChange.textContent = "No change";
+        els.insightMonthChangeDetail.textContent =
+          "Your spending matches last month's total.";
+      }
+    }
+  }
+
+  safelySetText(
+    els.insightMessage,
+    `Number of expenses this month: ${stats.currentCount}`
+  );
+}
+
+/* =========================================================
+   RENDER DASHBOARD
+========================================================= */
+
+function render() {
+  const stats = calculateMonthlyStats();
+
+  safelySetText(els.monthTotal, money(stats.currentTotal));
+  safelySetText(els.monthCount, String(stats.currentCount));
+
+  renderCategoryChart(stats.categoryTotals);
+  renderFilteredExpenses();
+  renderBudget();
+  renderSpendingInsights(stats);
+}
+
+/* =========================================================
+   INITIALIZE APPLICATION
+========================================================= */
+
+async function init() {
+  try {
+    session = await requireSession();
+
+    if (!session) return;
+
+    if (els.userEmail) {
+    els.userEmail.value = session?.user?.email || "";
+}
+    safelySetText(els.budgetMonthLabel, formatMonthLabel());
+
+    if (els.category) {
+      for (const name of CATEGORIES) {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        els.category.append(option);
+      }
+    }
+
+    if (els.filterCategory) {
+      for (const name of CATEGORIES) {
         const option = document.createElement("option");
         option.value = name;
         option.textContent = name;
         els.filterCategory.append(option);
+      }
     }
 
-    els.search.addEventListener(
-        "input",
-        debouncedRenderFilteredExpenses
-    );
-
-    els.filterCategory.addEventListener(
-        "change",
-        renderFilteredExpenses
-    );
-
-    els.filterFrom.addEventListener(
-        "change",
-        renderFilteredExpenses
-    );
-
-    els.filterTo.addEventListener(
-        "change",
-        renderFilteredExpenses
-    );
-
-    els.clearFilters.addEventListener("click", clearFilters);
-    els.exportExpenses.addEventListener("click", exportAllExpenses);
-}
-
-// ---------- Supabase: expenses ----------
-
-async function loadExpenses() {
-    const { data, error } = await supabase
-        .from("expenses")
-        .select(
-            "id, title, amount, category, expense_date, notes, created_at"
-        )
-        .eq("user_id", session.user.id)
-        .order("expense_date", { ascending: false })
-        .order("created_at", { ascending: false });
-
-    if (error) {
-        showMessage(
-            els.listMessage,
-            "Couldn’t load your expenses: " + error.message,
-            "error"
-        );
-        return false;
+    if (els.date) {
+      els.date.value = todayString();
     }
 
-    expenses = data || [];
-    showMessage(els.listMessage, "", "success");
-    render();
+    setupFilters();
+    setupPreferences();
 
-    return true;
-}
+    els.form?.addEventListener("submit", saveExpense);
+    els.cancelBtn?.addEventListener("click", resetForm);
+    els.budgetForm?.addEventListener("submit", saveBudget);
+    els.logoutBtn?.addEventListener("click", signOut);
 
-// ---------- Monthly budget ----------
-
-async function loadBudget() {
-    const { data, error } = await supabase
-        .from("budgets")
-        .select("id, amount, budget_month")
-        .eq("user_id", session.user.id)
-        .eq("budget_month", currentMonthStart())
-        .maybeSingle();
-
-    if (error) {
-        currentBudget = null;
-        els.budgetProgressArea.hidden = true;
-
-        showMessage(
-            els.budgetMessage,
-            "Couldn’t load your budget: " + error.message,
-            "error"
-        );
-        return;
-    }
-
-    currentBudget = data;
-
-    els.budgetAmount.value = data
-        ? Number(data.amount).toFixed(2)
-        : "";
-
-    showMessage(els.budgetMessage, "", "success");
-    renderBudget();
-}
-
-function renderBudget(stats = calculateMonthlyStats()) {
-    els.budgetMonthLabel.textContent = formatMonthLabel();
-
-    if (!currentBudget) {
-        els.budgetProgressArea.hidden = true;
-        els.budgetAlert.textContent = "";
-        return;
-    }
-
-    const budget = Number(currentBudget.amount);
-    const spent = stats.currentTotal;
-    const remaining = budget - spent;
-    const percent = (spent / budget) * 100;
-    const progressWidth = Math.min(percent, 100);
-
-    els.budgetProgressArea.hidden = false;
-    els.budgetSpent.textContent = money.format(spent);
-    els.budgetRemaining.textContent = money.format(remaining);
-    els.budgetPercent.textContent =
-        `${percent.toFixed(1)}% of your monthly budget used`;
-
-    els.budgetProgressBar.style.width = `${progressWidth}%`;
-
-    els.budgetProgressTrack.setAttribute(
-        "aria-valuenow",
-        String(Math.min(Math.round(percent), 100))
-    );
-
-    els.budgetProgressTrack.setAttribute(
-        "aria-valuetext",
-        `${percent.toFixed(1)} percent of budget used`
-    );
-
-    els.budgetProgressBar.classList.remove(
-        "is-warning",
-        "is-over-budget"
-    );
-
-    els.budgetAlert.className = "budget-alert";
-
-    if (percent >= 100) {
-        els.budgetProgressBar.classList.add("is-over-budget");
-        els.budgetAlert.classList.add("is-over-budget");
-
-        els.budgetAlert.textContent =
-            `Budget exceeded by ${money.format(spent - budget)}. ` +
-            "Review your spending for the rest of the month.";
-    } else if (percent >= 80) {
-        els.budgetProgressBar.classList.add("is-warning");
-        els.budgetAlert.classList.add("is-warning");
-
-        els.budgetAlert.textContent =
-            "You’ve used at least 80% of your budget. Keep an eye on your spending.";
-    } else {
-        els.budgetAlert.textContent =
-            "You’re within your monthly budget. Keep it up!";
-    }
-}
-
-async function saveBudget(event) {
-    event.preventDefault();
-    showMessage(els.budgetMessage, "", "success");
-
-    const amount = Number(els.budgetAmount.value);
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-        showMessage(
-            els.budgetMessage,
-            "Enter a budget greater than zero.",
-            "error"
-        );
-        els.budgetAmount.focus();
-        return;
-    }
-
-    els.budgetSaveBtn.disabled = true;
-
-    try {
-        const { data, error } = await supabase
-            .from("budgets")
-            .upsert(
-                {
-                    user_id: session.user.id,
-                    budget_month: currentMonthStart(),
-                    amount,
-                    updated_at: new Date().toISOString(),
-                },
-                {
-                    onConflict: "user_id,budget_month",
-                }
-            )
-            .select("id, amount, budget_month")
-            .single();
-
-        if (error) {
-            showMessage(
-                els.budgetMessage,
-                "Couldn’t save your budget: " + error.message,
-                "error"
-            );
-            return;
-        }
-
-        currentBudget = data;
-        renderBudget();
-
-        showMessage(
-            els.budgetMessage,
-            "Your monthly budget has been saved.",
-            "success"
-        );
-    } catch (error) {
-        console.error("Save budget error:", error);
-
-        showMessage(
-            els.budgetMessage,
-            "Something went wrong while saving your budget. Please try again.",
-            "error"
-        );
-    } finally {
-        els.budgetSaveBtn.disabled = false;
-    }
-}
-
-// ---------- Add and edit expenses ----------
-
-async function saveExpense(event) {
-    event.preventDefault();
-    showMessage(els.formMessage, "", "success");
-
-    const title = els.title.value.trim();
-    const amount = Number(els.amount.value);
-
-    if (!title) {
-        showMessage(els.formMessage, "Enter what you bought.", "error");
-        els.title.focus();
-        return;
-    }
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-        showMessage(
-            els.formMessage,
-            "Enter an amount greater than zero.",
-            "error"
-        );
-        els.amount.focus();
-        return;
-    }
-
-    if (!els.date.value) {
-        showMessage(els.formMessage, "Choose an expense date.", "error");
-        els.date.focus();
-        return;
-    }
-
-    const fields = {
-        title,
-        amount,
-        category: els.category.value,
-        expense_date: els.date.value,
-        notes: els.notes.value.trim() || null,
-    };
-
-    els.saveBtn.disabled = true;
-
-    try {
-        let result;
-
-        if (editingId) {
-            result = await supabase
-                .from("expenses")
-                .update(fields)
-                .eq("id", editingId)
-                .eq("user_id", session.user.id)
-                .select();
-        } else {
-            result = await supabase
-                .from("expenses")
-                .insert({
-                    ...fields,
-                    user_id: session.user.id,
-                })
-                .select();
-        }
-
-        if (result.error) {
-            showMessage(
-                els.formMessage,
-                "Couldn’t save: " + result.error.message,
-                "error"
-            );
-            return;
-        }
-
-        if (!result.data || result.data.length === 0) {
-            showMessage(
-                els.formMessage,
-                "Couldn’t save: that expense wasn’t found.",
-                "error"
-            );
-            return;
-        }
-
-        const wasEditing = Boolean(editingId);
-        resetForm();
-
-        showMessage(
-            els.formMessage,
-            wasEditing ? "Changes saved." : "Expense added.",
-            "success"
-        );
-
-        await loadExpenses();
-    } catch (error) {
-        console.error("Save expense error:", error);
-
-        showMessage(
-            els.formMessage,
-            "Something went wrong while saving. Please try again.",
-            "error"
-        );
-    } finally {
-        els.saveBtn.disabled = false;
-    }
-}
-
-async function deleteExpense(expense) {
-    const ok = window.confirm(
-        `Delete “${expense.title}”? This can’t be undone.`
-    );
-
-    if (!ok) return;
-
-    const { data, error } = await supabase
-        .from("expenses")
-        .delete()
-        .eq("id", expense.id)
-        .eq("user_id", session.user.id)
-        .select();
-
-    if (error) {
-        showMessage(
-            els.listMessage,
-            "Couldn’t delete: " + error.message,
-            "error"
-        );
-        return;
-    }
-
-    if (!data || data.length === 0) {
-        showMessage(
-            els.listMessage,
-            "Couldn’t delete: that expense wasn’t found.",
-            "error"
-        );
-        return;
-    }
-
-    if (editingId === expense.id) {
-        resetForm();
-    }
-
-    showMessage(els.listMessage, "Expense deleted.", "success");
-    await loadExpenses();
-}
-
-// ---------- Form behaviour ----------
-
-function resetForm() {
-    editingId = null;
-    els.form.reset();
-    els.date.value = todayString();
-    els.category.value = CATEGORIES[0];
-    els.formTitle.textContent = "Add an expense";
-    els.saveBtn.textContent = "Add expense";
-    els.cancelBtn.hidden = true;
-
-    showMessage(els.formMessage, "", "success");
-}
-
-function startEdit(expense) {
-    editingId = expense.id;
-    els.title.value = expense.title;
-    els.amount.value = expense.amount;
-    els.date.value = expense.expense_date;
-
-    els.category.value = CATEGORIES.includes(expense.category)
-        ? expense.category
-        : "Other";
-
-    els.notes.value = expense.notes || "";
-    els.formTitle.textContent = "Edit expense";
-    els.saveBtn.textContent = "Save changes";
-    els.cancelBtn.hidden = false;
-
-    showMessage(els.formMessage, "", "success");
-
-    els.form.scrollIntoView({
-        behavior: prefersReducedMotion() ? "auto" : "smooth",
-        block: "center",
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        window.location.replace("login.html");
+      }
     });
 
-    els.title.focus();
-}
+    await Promise.all([
+      loadExpenses(),
+      loadBudget()
+    ]);
 
-// ---------- Category chart ----------
-
-function renderCategoryChart(stats) {
-    const entries = [...stats.categoryTotals.entries()]
-        .filter(([, total]) => total > 0)
-        .sort((a, b) => b[1] - a[1]);
-
-    els.categorySummary.replaceChildren();
-    els.chartError.hidden = true;
-
-    const summaryFragment = document.createDocumentFragment();
-
-    for (const [category, total] of entries) {
-        const item = document.createElement("li");
-        item.className = "category-summary-item";
-
-        const name = document.createElement("span");
-        name.textContent = category;
-
-        const amount = document.createElement("strong");
-        amount.textContent = money.format(total);
-
-        item.append(name, amount);
-        summaryFragment.append(item);
+    if (els.loading) {
+      els.loading.hidden = true;
     }
 
-    els.categorySummary.append(summaryFragment);
-
-    if (entries.length === 0) {
-        if (categoryChart) {
-            categoryChart.destroy();
-            categoryChart = null;
-        }
-
-        els.chartContainer.hidden = true;
-        els.chartEmpty.hidden = false;
-        return;
+    if (els.app) {
+      els.app.hidden = false;
     }
 
-    els.chartEmpty.hidden = true;
+    render();
 
-    if (typeof window.Chart !== "function") {
-        els.chartContainer.hidden = true;
-        els.chartError.hidden = false;
-        return;
+    // Load the saved theme without blocking the dashboard.
+    await loadPreferences();
+
+  } catch (error) {
+    console.error("SpendWise initialization error:", error);
+
+    if (els.loading) {
+      els.loading.hidden = true;
     }
 
-    els.chartContainer.hidden = false;
-
-    const labels = entries.map(([category]) => category);
-    const values = entries.map(([, total]) => total);
-
-    try {
-        if (categoryChart) {
-            // Update the existing chart instead of rebuilding it.
-            categoryChart.data.labels = labels;
-            categoryChart.data.datasets[0].data = values;
-            categoryChart.update("none");
-            return;
-        }
-
-        categoryChart = new window.Chart(els.chartCanvas, {
-            type: "doughnut",
-            data: {
-                labels,
-                datasets: [
-                    {
-                        data: values,
-                        borderWidth: 2,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: "58%",
-                plugins: {
-                    legend: {
-                        position: "bottom",
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label(context) {
-                                return `${context.label}: ${money.format(
-                                    Number(context.raw)
-                                )}`;
-                            },
-                        },
-                    },
-                },
-            },
-        });
-    } catch (error) {
-        console.error("Chart rendering error:", error);
-        els.chartContainer.hidden = true;
-        els.chartError.hidden = false;
-    }
-}
-
-// ---------- Spending insights ----------
-
-function renderSpendingInsights(stats) {
-    const topCategory = [...stats.categoryTotals.entries()]
-        .sort((a, b) => b[1] - a[1])[0];
-
-    if (topCategory) {
-        els.insightTopCategory.textContent = topCategory[0];
-        els.insightTopCategoryDetail.textContent =
-            `${money.format(topCategory[1])} spent this month`;
-    } else {
-        els.insightTopCategory.textContent = "No spending yet";
-        els.insightTopCategoryDetail.textContent =
-            "Add an expense to see your top category.";
-    }
-
-    if (stats.previousCount === 0) {
-        els.insightMonthChange.textContent = "No comparison yet";
-        els.insightMonthChangeDetail.textContent =
-            "No expenses were recorded last month.";
-    } else if (stats.previousTotal === 0) {
-        els.insightMonthChange.textContent =
-            stats.currentTotal > 0 ? "Spending started" : "No change";
-
-        els.insightMonthChangeDetail.textContent =
-            "Last month's total was ₹0.00, so percentage change isn't available.";
-    } else {
-        const difference = stats.currentTotal - stats.previousTotal;
-        const percentage =
-            (Math.abs(difference) / stats.previousTotal) * 100;
-
-        if (difference > 0) {
-            els.insightMonthChange.textContent =
-                `${percentage.toFixed(1)}% higher`;
-        } else if (difference < 0) {
-            els.insightMonthChange.textContent =
-                `${percentage.toFixed(1)}% lower`;
-        } else {
-            els.insightMonthChange.textContent = "No change";
-        }
-
-        els.insightMonthChangeDetail.textContent =
-            `${money.format(stats.previousTotal)} last month · ` +
-            `${money.format(stats.currentTotal)} this month`;
-    }
-
-    if (stats.currentCount === 0) {
-        showMessage(
-            els.insightMessage,
-            "Your insights will update when you record expenses this month.",
-            ""
-        );
-    } else if (topCategory) {
-        showMessage(
-            els.insightMessage,
-            `Your highest-spending category this month is ${topCategory[0]}.`,
-            ""
-        );
-    }
-}
-
-// ---------- Dashboard rendering ----------
-
-function render() {
-    const stats = calculateMonthlyStats();
-
-    els.monthTotal.textContent = money.format(stats.currentTotal);
-    els.monthCount.textContent =
-        stats.currentCount === 1
-            ? "1 expense so far"
-            : `${stats.currentCount} expenses so far`;
-
-    renderCategoryChart(stats);
-    renderFilteredExpenses();
-    renderBudget(stats);
-    renderSpendingInsights(stats);
-}
-
-// ---------- Start-up ----------
-
-async function init() {
-    try {
-        session = await requireSession();
-
-        if (!session) return;
-
-        els.userEmail.textContent = session.user.email;
-        els.budgetMonthLabel.textContent = formatMonthLabel();
-
-        for (const name of CATEGORIES) {
-            const option = document.createElement("option");
-            option.value = name;
-            option.textContent = name;
-            els.category.append(option);
-        }
-
-        els.date.value = todayString();
-
-        setupFilters();
-
-        els.form.addEventListener("submit", saveExpense);
-        els.cancelBtn.addEventListener("click", resetForm);
-        els.budgetForm.addEventListener("submit", saveBudget);
-        els.logoutBtn.addEventListener("click", signOut);
-
-        supabase.auth.onAuthStateChange((event) => {
-            if (event === "SIGNED_OUT") {
-                window.location.replace("login.html");
-            }
-        });
-
-        // These requests can run concurrently.
-        await Promise.all([loadExpenses(), loadBudget()]);
-
-        els.loading.hidden = true;
-        els.app.hidden = false;
-    } catch (error) {
-        console.error("SpendWise initialization error:", error);
-
-        showMessage(
-            els.listMessage,
-            "SpendWise couldn't finish loading. Please refresh and try again.",
-            "error"
-        );
-
-        els.loading.hidden = true;
-    }
+    showMessage(
+      els.listMessage,
+      "SpendWise couldn't finish loading. Please refresh and try again.",
+      "error"
+    );
+  }
 }
 
 init();

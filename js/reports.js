@@ -2,6 +2,11 @@
 import { supabase } from "./supabaseClient.js";
 import { requireSession, signOut } from "./auth.js";
 import { CURRENCY_CODE } from "./config.js";
+import { applyStoredTheme, loadSavedTheme } from "./theme.js";
+
+// Use the theme this browser remembers right away; the saved theme is
+// confirmed once login is checked (see initReports).
+applyStoredTheme();
 
 const $ = (id) => document.getElementById(id);
 
@@ -145,6 +150,19 @@ function renderSummary(months, totals, expenses) {
     }
 }
 
+// Reads the active theme's colours so the chart matches the rest of the page.
+function getChartColors() {
+    const styles = getComputedStyle(document.body);
+    const read = (name, fallback) =>
+        styles.getPropertyValue(name).trim() || fallback;
+
+    return {
+        bar: read("--primary", "#2b3bd1"),
+        text: read("--muted", "#51606e"),
+        grid: read("--line", "#d5dce3")
+    };
+}
+
 function renderChart(months, totals) {
     const canvas = $("spending-trend-chart");
     const chartContainer = $("trend-chart-container");
@@ -168,6 +186,8 @@ function renderChart(months, totals) {
     chartContainer.hidden = false;
     emptyMessage.hidden = true;
 
+    const colors = getChartColors();
+
     trendChart = new Chart(canvas, {
         type: "bar",
         data: {
@@ -175,6 +195,8 @@ function renderChart(months, totals) {
             datasets: [{
                 label: "Total spending",
                 data: months.map((month) => totals[month.key].total),
+                backgroundColor: colors.bar,
+                borderColor: colors.bar,
                 borderWidth: 1,
                 borderRadius: 6
             }]
@@ -194,11 +216,23 @@ function renderChart(months, totals) {
                 }
             },
             scales: {
+                x: {
+                    ticks: {
+                        color: colors.text
+                    },
+                    grid: {
+                        color: colors.grid
+                    }
+                },
                 y: {
                     beginAtZero: true,
                     ticks: {
+                        color: colors.text,
                         callback: (value) =>
                             formatMoney(value)
+                    },
+                    grid: {
+                        color: colors.grid
                     }
                 }
             }
@@ -288,6 +322,8 @@ async function initReports() {
         const session = await requireSession();
 
         if (!session) return;
+
+        await loadSavedTheme(session.user.id);
 
         $("user-email").textContent = session.user?.email || "";
         $("loading").hidden = true;
