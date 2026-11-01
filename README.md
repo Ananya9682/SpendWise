@@ -126,23 +126,25 @@ flowchart LR
 
 ## Screenshots
 
-Add your own screenshots to a `docs/screenshots/` folder (or any folder you prefer) and replace the placeholders below.
+## Screenshots
 
-| Screen | Placeholder |
-|---|---|
-| Landing page | _Screenshot to be added: `docs/screenshots/landing.png`_ |
-| Sign up and log in | _Screenshot to be added: `docs/screenshots/auth.png`_ |
-| Dashboard with budget and insights | _Screenshot to be added: `docs/screenshots/dashboard.png`_ |
-| Expense list with search and filters | _Screenshot to be added: `docs/screenshots/expense-list.png`_ |
-| Expense details page | _Screenshot to be added: `docs/screenshots/expense-details.png`_ |
-| Reports page | _Screenshot to be added: `docs/screenshots/reports.png`_ |
-| Settings and theme picker | _Screenshot to be added: `docs/screenshots/settings.png`_ |
-| Phone layout | _Screenshot to be added: `docs/screenshots/mobile.png`_ |
+### 1. Dashboard
+![SpendWise Dashboard](docs/screenshots/dashboard.png)
 
-<!--
-When you have a screenshot, replace its placeholder text with an image like this:
-![Dashboard](docs/screenshots/dashboard.png)
--->
+### 2. Expense List
+![Expense List](docs/screenshots/expense-list.png)
+
+### 3. Expense Details
+![Expense Details](docs/screenshots/expense-details.png)
+
+### 4. Reports – Monthly Chart
+![Reports Chart](docs/screenshots/reports-chart.png)
+
+### 5. Reports – Monthly Breakdown
+![Reports Breakdown](docs/screenshots/reports-breakdown.png)
+
+### 6. Settings and Themes
+![Settings and Themes](docs/screenshots/settings-themes.png)
 
 ---
 
@@ -305,7 +307,7 @@ SpendWise/
 ## Known limitations
 
 - There is **no automated test suite** yet. The app has been tested manually.
-- The theme is applied on the dashboard and Reports page only. The landing, login, sign-up and expense-details pages use the default look.
+- The saved theme is applied on the Dashboard, Reports, and Expense Details pages. The landing, login, and sign-up pages still use the default look.
 - Chart.js is loaded from a CDN link without a fixed version number.
 - There is no "forgot password" page yet.
 - Categories are a fixed list in the code.
