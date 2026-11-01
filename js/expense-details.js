@@ -2,6 +2,11 @@
 import { supabase } from "./supabaseClient.js";
 import { requireSession, signOut } from "./auth.js";
 import { CURRENCY_CODE } from "./config.js";
+import { applyStoredTheme, loadSavedTheme } from "./theme.js";
+
+// Use the theme this browser remembers right away; the saved theme is
+// confirmed once login is checked (see init).
+applyStoredTheme();
 
 const $ = (id) => document.getElementById(id);
 
@@ -166,6 +171,8 @@ async function init() {
     const session = await requireSession();
 
     if (!session) return;
+
+    await loadSavedTheme(session.user.id);
 
     currentUserId = session.user.id;
     els.userEmail.textContent = session.user.email;
