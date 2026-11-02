@@ -70,7 +70,7 @@ Every feature below exists in the code in this repository.
 ### Settings and themes
 - A Settings panel showing the account email, a **theme picker** and the **Log out** button.
 - **Six themes:** Default, Youthful, Classic, Calm, High Contrast and Midnight Navy.
-- The chosen theme is **saved to the user's account** and applied on both the dashboard and the Reports page, with a browser fallback if the saved theme cannot be loaded.
+- - The chosen theme is **saved to the user's account** and applied on the Dashboard, Reports, and Expense Details pages, with a browser fallback if the saved theme cannot be loaded.
 
 ### Design and accessibility
 - **Responsive layout** for laptops and phones.
@@ -107,7 +107,7 @@ flowchart LR
     N[Netlify<br/>static hosting] -->|serves the files| U
 ```
 
-1. **Pages and scripts.** Each page loads one JavaScript module. Shared modules handle the Supabase connection (`supabaseClient.js`), session checks and logout (`auth.js`) and the saved theme for the Reports page (`theme.js`).
+1. **Pages and scripts.** Each page loads one JavaScript module. Shared modules handle the Supabase connection (`supabaseClient.js`), session checks and logout (`auth.js`), and saved theme application (`theme.js`).
 2. **Authentication.** After login, Supabase keeps the session in the browser and sends it with every request. Protected pages check for a session and redirect to the login page if there is none.
 3. **Data access.** The app reads and writes three tables through the Supabase client: `expenses`, `budgets` and `user_preferences`.
 4. **Privacy.** The database enforces a rule on every table: a user can only read or change rows where `user_id` matches their own account. This protection lives in the database, not only in the page code.
@@ -123,8 +123,6 @@ flowchart LR
 | `user_preferences` | One row per user | `user_id`, `theme`, `onboarding_completed`, `updated_at` |
 
 ---
-
-## Screenshots
 
 ## Screenshots
 
@@ -288,7 +286,7 @@ SpendWise/
 │   ├── expenses.js         Dashboard: expenses, filters, budget, insights, themes, CSV export
 │   ├── expense-details.js  Loads and shows a single expense
 │   ├── reports.js          Report totals, chart and monthly table
-│   └── theme.js            Applies the saved theme on the Reports page
+│   └── theme.js            Applies the saved theme on the Reports and Expense Details pages
 ├── .gitignore
 └── README.md
 ```
