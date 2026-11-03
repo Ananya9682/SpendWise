@@ -1,0 +1,23 @@
+
+{
+  "name": "SpendWise - Expense Tracker",
+  "short_name": "SpendWise",
+  "description": "Manage expenses, track budgets and understand your spending habits.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#071B3A",
+  "theme_color": "#071B3A",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
