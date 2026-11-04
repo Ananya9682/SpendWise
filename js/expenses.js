@@ -1135,6 +1135,25 @@ async function deleteExpense(id) {
     expenses = expenses.filter(
       (item) => String(item.id) !== String(id)
     );
+    // Update the saved offline cache after deleting an expense.
+    try {
+      localStorage.setItem(
+         getExpenseCacheKey(session.user.id),
+         JSON.stringify(expenses)
+      );
+    } catch (error) {
+        console.error("Could not update saved expenses:", error);
+    }
+
+    // Update the saved offline cache after deleting an expense.
+    try {
+      localStorage.setItem(
+        getExpenseCacheKey(session.user.id),
+        JSON.stringify(expenses)
+      );
+    } catch (error) {
+      console.error("Could not update saved expenses:", error);
+    }
 
     if (String(editingId) === String(id)) {
       resetForm();
@@ -1510,6 +1529,7 @@ function updateConnectionStatus() {
 }
 // Check the connection when the page loads.
 updateConnectionStatus();
+window.addEventListener("offline", updateConnectionStatus);
 
 // Update the app when the connection changes.
 // Update the app when the connection changes.
