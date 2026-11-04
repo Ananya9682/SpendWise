@@ -704,10 +704,12 @@ function renderFilteredExpenses() {
 
     const editButton = createElement("button", "btn btn-secondary", "Edit");
     editButton.type = "button";
+    editButton.disabled = !navigator.onLine;
     editButton.addEventListener("click", () => startEdit(expense.id));
 
     const deleteButton = createElement("button", "btn btn-danger", "Delete");
     deleteButton.type = "button";
+    deleteButton.disabled = !navigator.onLine;
     deleteButton.addEventListener("click", () => deleteExpense(expense.id));
 
     actions.append(viewLink, editButton, deleteButton);
@@ -753,23 +755,82 @@ function setupFilters() {
    LOAD EXPENSES AND BUDGET
 ========================================================= */
 
+// Create a separate cache for each logged-in user.
+function getExpenseCacheKey(userId) {
+    return `spendwise-expenses-${userId}`;
+}
+
+// Read previously saved expenses from this user's cache.
+function getCachedExpenses() {
+    const cacheKey = getExpenseCacheKey(session.user.id);
+    const savedData = localStorage.getItem(cacheKey);
+
+    if (savedData === null) {
+        return null;
+    }
+
+    try {
+        const parsedData = JSON.parse(savedData);
+        return Array.isArray(parsedData) ? parsedData : null;
+    } catch (error) {
+        console.error("Could not read saved expenses:", error);
+        return null;
+    }
+}
+
+// Load expenses from Supabase or use saved data when offline.
 async function loadExpenses() {
-  const { data, error } = await supabase
-    .from("expenses")
-    .select("id, title, amount, category, expense_date, notes, created_at")
-    .eq("user_id", session.user.id)
-    .order("expense_date", { ascending: false })
-    .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Could not load expenses:", error);
-    throw error;
-  }
+    // If offline, try to use previously saved expenses.
+    if (!navigator.onLine) {
+        const cachedExpenses = getCachedExpenses();
 
-  expenses = data || [];
+        if (cachedExpenses !== null) {
+            expenses = cachedExpenses;
+            console.log("Loaded saved expenses while offline.");
+            return;
+        }
+
+        throw new Error("No saved expenses are available offline.");
+    }
+
+    // If online, fetch the latest expenses from Supabase.
+    const { data, error } = await supabase
+        .from("expenses")
+        .select("id, title, amount, category, expense_date, notes, created_at")
+        .eq("user_id", session.user.id)
+        .order("expense_date", { ascending: false })
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Could not load expenses:", error);
+        throw error;
+    }
+
+    expenses = data || [];
+
+    // Save a copy for future offline viewing.
+    try {
+        localStorage.setItem(
+            getExpenseCacheKey(session.user.id),
+            JSON.stringify(expenses)
+        );
+    } catch (error) {
+        console.error("Could not save expenses offline:", error);
+    }
 }
 
 async function loadBudget() {
+      // Skip the Supabase budget request when offline.
+    if (!navigator.onLine) {
+        currentBudget = null;
+
+        if (els.budgetAmount) {
+            els.budgetAmount.value = "";
+        }
+
+        return;
+    }
   const month = currentMonthStart();
 
   const { data, error } = await supabase
@@ -1376,11 +1437,8 @@ async function init() {
       }
     });
 
-    await Promise.all([
-      loadExpenses(),
-      loadBudget()
-    ]);
-
+    await loadExpenses();
+    await loadBudget();
     if (els.loading) {
       els.loading.hidden = true;
     }
@@ -1408,5 +1466,65 @@ async function init() {
     );
   }
 }
+function updateConnectionStatus() {
+    const offlineIndicator = document.getElementById("offline-indicator");
+
+    if (offlineIndicator) {
+        offlineIndicator.hidden = navigator.onLine;
+    }
+
+    // Disable adding or editing expenses while offline.
+    const expenseForm = document.getElementById("expense-form");
+
+    if (expenseForm) {
+        const formFields = expenseForm.querySelectorAll(
+            "input, select, textarea, button"
+        );
+
+        formFields.forEach((field) => {
+            field.disabled = !navigator.onLine;
+        });
+    }
+
+    // Disable changing the monthly budget while offline.
+    const budgetForm = document.getElementById("budget-form");
+
+    if (budgetForm) {
+        const budgetFields = budgetForm.querySelectorAll(
+            "input, select, textarea, button"
+        );
+
+        budgetFields.forEach((field) => {
+            field.disabled = !navigator.onLine;
+        });
+    }
+
+    // Enable or disable Edit and Delete buttons in the expense list.
+    const expenseActionButtons = document.querySelectorAll(
+        "#expense-list .expense-actions button"
+    );
+
+    expenseActionButtons.forEach((button) => {
+        button.disabled = !navigator.onLine;
+    });
+}
+// Check the connection when the page loads.
+updateConnectionStatus();
+
+// Update the app when the connection changes.
+// Update the app when the connection changes.
+window.addEventListener("online", async () => {
+    updateConnectionStatus();
+
+    try {
+        await loadExpenses();
+        await loadBudget();
+        render();
+
+        console.log("SpendWise data refreshed after reconnecting.");
+    } catch (error) {
+        console.error("Could not refresh SpendWise data:", error);
+    }
+});
 
 init();
